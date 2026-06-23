@@ -68,7 +68,7 @@ class CartAddView(View):
 
 
 #购物车数据显示---Redis 中获取数据
-class CartInfoView(View):
+class CartInfoView(LoginRequiredMixin, View):
     def get(self,request):
         """从Redis中获取数据"""
         user = request.user

@@ -15,7 +15,24 @@ from django.urls import reverse
 from utils.mixin import LoginRequiredMixin
 
 
-class OrderPlaceView(View):
+ALIPAY_APP_ID = '9021000164696803'
+ALIPAY_GATEWAY = 'https://openapi-sandbox.dl.alipaydev.com/gateway.do?'
+
+
+def get_alipay_client():
+    app_private_key_string = open(os.path.join(settings.BASE_DIR, 'order/app_private_key.pem')).read()
+    alipay_public_key_string = open(os.path.join(settings.BASE_DIR, 'order/alipay_public_key.pem')).read()
+    return AliPay(
+        appid=ALIPAY_APP_ID,
+        app_notify_url=None,
+        app_private_key_string=app_private_key_string,
+        alipay_public_key_string=alipay_public_key_string,
+        sign_type="RSA2",
+        debug=True
+    )
+
+
+class OrderPlaceView(LoginRequiredMixin, View):
     """提交订单页面的显示"""
     def post(self,request):
         sku_ids =  request.POST.getlist('sku_ids')
@@ -23,7 +40,7 @@ class OrderPlaceView(View):
 
         #参数校验
         if not sku_ids:
-            return redirect(reversed('cart:show'))
+            return redirect(reverse('cart:show'))
 
         #创建 Redis 连接对象
         conn = get_redis_connection('default')
@@ -204,7 +221,7 @@ class OrderCommitView1(View):
             order.save()
         except Exception as e:
             transaction.savepoint_rollback(save_id)
-            return JsonResponse({'res': 7, 'errmsg': '下单失败'})
+            return JsonResponse({'res': 7, 'errmsg': '下单失败: %s' % str(e)})
 
         # 提交事务
         transaction.savepoint_commit(save_id)
@@ -245,22 +262,10 @@ class OrderPayView(View):
         except OrderInfo.DoesNotExist:
             return JsonResponse({'res':2,'errmsg':'无效订单'})
 
-        #配置两个密钥文件地址
-        app_private_key_string =open(os.path.join(settings.BASE_DIR,'order/app_private_key.pem')).read()
-        alipay_public_key_string = open(os.path.join(settings.BASE_DIR, 'order/alipay_public_key.pem')).read()
-
-        # 业务处理：使用Python sdk调用支付宝的支付接口
-        # 初始化
-
-        alipay = AliPay(
-            appid = '9021000149692412',
-            app_notify_url=None,  # 默认回调url
-            app_private_key_string=app_private_key_string,
-            # 支付宝的公钥，验证支付宝回传消息使用，不是你自己的公钥,
-            alipay_public_key_string=alipay_public_key_string,
-            sign_type="RSA2",  # RSA 或者 RSA2
-            debug=True  # 默认False True就会访问沙箱地址
-        )
+        try:
+            alipay = get_alipay_client()
+        except Exception as e:
+            return JsonResponse({'res': 4, 'errmsg': '支付宝配置错误: %s' % str(e)})
 
         # 调用支付接口
         # 电脑网站支付，需要跳转到https://openapi.alipaydev.com/gateway.do? + order_string
@@ -268,15 +273,40 @@ class OrderPayView(View):
         order_string = alipay.api_alipay_trade_page_pay(
             out_trade_no=order_id,  # 订单id
             total_amount=str(total_pay),
-            subject='阿伟电商网站%s' % order_id,
-            return_url=None,
+            subject='天天生鲜订单-%s' % order_id,
+            return_url=request.build_absolute_uri(reverse('user:order', kwargs={'page': 1})),
             notify_url=None  # 可选, 不填则使用默认notify url
         )
 
         # 返回应答
         #下面的地址
-        pay_url = 'https://openapi-sandbox.dl.alipaydev.com/gateway.do?' + order_string
+        pay_url = ALIPAY_GATEWAY + order_string
         return JsonResponse({'res': 3, 'pay_url': pay_url})
+
+
+class MockPayView(View):
+    """开发环境模拟支付成功"""
+    def post(self, request):
+        if not settings.DEBUG:
+            return JsonResponse({'res': 4, 'errmsg': '模拟支付只允许在开发环境使用'})
+
+        user = request.user
+        if not user.is_authenticated:
+            return JsonResponse({'res': 0, 'errmsg': '请先进行登录!'})
+
+        order_id = request.POST.get('order_id')
+        if not order_id:
+            return JsonResponse({'res': 1, 'errmsg': '订单编号不存在'})
+
+        try:
+            order = OrderInfo.objects.get(order_id=order_id, user=user, order_status=1)
+        except OrderInfo.DoesNotExist:
+            return JsonResponse({'res': 2, 'errmsg': '无效订单'})
+
+        order.trade_no = 'mock_%s' % datetime.now().strftime('%Y%m%d%H%M%S')
+        order.order_status = 4
+        order.save()
+        return JsonResponse({'res': 3, 'message': '模拟支付成功'})
 
 
 
@@ -310,22 +340,10 @@ class CheckPayView(View):
         except OrderInfo.DoesNotExist:
             return JsonResponse({'res': 2, 'errmsg': '无效订单'})
 
-        # 配置两个密钥文件地址
-        app_private_key_string = open(os.path.join(settings.BASE_DIR, 'order/app_private_key.pem')).read()
-        alipay_public_key_string = open(os.path.join(settings.BASE_DIR, 'order/alipay_public_key.pem')).read()
-
-        # 业务处理：使用Python sdk调用支付宝的支付接口
-        # 初始化
-
-        alipay = AliPay(
-            appid='9021000149692412',
-            app_notify_url=None,  # 默认回调url
-            app_private_key_string=app_private_key_string,
-            # 支付宝的公钥，验证支付宝回传消息使用，不是你自己的公钥,
-            alipay_public_key_string=alipay_public_key_string,
-            sign_type="RSA2",  # RSA 或者 RSA2
-            debug=True  # 默认False True就会访问沙箱地址
-        )
+        try:
+            alipay = get_alipay_client()
+        except Exception as e:
+            return JsonResponse({'res': 4, 'errmsg': '支付宝配置错误: %s' % str(e)})
 
         #调用支付宝查询接口
         #循环的一种用法，有时候我们不知道一个功能是否需要循环，可以先编写这个功能，当发现一段代码需要多次
@@ -357,7 +375,7 @@ class CheckPayView(View):
 
 class CommentView(LoginRequiredMixin, View):
     """订单评论"""
-    def get(self, request, order_id):
+    def get(self, request, order_id, order_goods_id=None):
         """提供评论页面"""
         user = request.user
         # 校验数据
@@ -372,20 +390,31 @@ class CommentView(LoginRequiredMixin, View):
         # 根据订单的状态获取订单的状态标题
         order.status_name = OrderInfo.ORDER_STATUS[order.order_status]
 
-        # 获取订单商品信息
-        order_skus = OrderGoods.objects.filter(order_id=order_id)
-        for order_sku in order_skus:
-            # 计算商品的小计
-            amount = order_sku.count*order_sku.price
-            # 动态给order_sku增加属性amount,保存商品小计
-            order_sku.amount = amount
-        # 动态给order增加属性order_skus, 保存订单商品信息
-        order.order_skus = order_skus
+        if order_goods_id is None:
+            order_goods = OrderGoods.objects.filter(order=order, comment='').first()
+            if order_goods is None:
+                return redirect(reverse("user:order", kwargs={"page": 1}))
+            return redirect(reverse("order:comment_item", kwargs={
+                "order_id": order_id,
+                "order_goods_id": order_goods.id
+            }))
+
+        try:
+            order_sku = OrderGoods.objects.get(id=order_goods_id, order=order)
+        except OrderGoods.DoesNotExist:
+            return redirect(reverse("user:order", kwargs={"page": 1}))
+
+        order_sku.amount = order_sku.count * order_sku.price
+        remaining_count = OrderGoods.objects.filter(order=order, comment='').exclude(id=order_sku.id).count()
 
         # 使用模板
-        return render(request, "order_comment.html", {"order": order})
+        return render(request, "order_comment.html", {
+            "order": order,
+            "order_sku": order_sku,
+            "remaining_count": remaining_count
+        })
 
-    def post(self, request, order_id):
+    def post(self, request, order_id, order_goods_id=None):
         """处理评论内容"""
         user = request.user
         # 校验数据
@@ -397,31 +426,33 @@ class CommentView(LoginRequiredMixin, View):
         except OrderInfo.DoesNotExist:
             return redirect(reverse("user:order"))
 
-        # 获取评论条数
-        total_count = request.POST.get("total_count")
-        total_count = int(total_count)
-
-        # 循环获取订单中商品的评论内容
-        for i in range(1, total_count + 1):
-            # 获取评论的商品的id
-            sku_id = request.POST.get("sku_%d" % i) # sku_1 sku_2
-            # 获取评论的商品的内容
-            content = request.POST.get('content_%d' % i, '') # cotent_1 content_2 content_3
+        if order_goods_id is None:
+            # 兼容旧整单评价表单，逐条保存后重新计算订单状态
+            total_count = request.POST.get("total_count")
+            total_count = int(total_count)
+            for i in range(1, total_count + 1):
+                sku_id = request.POST.get("sku_%d" % i)
+                content = request.POST.get('content_%d' % i, '')
+                try:
+                    order_goods = OrderGoods.objects.get(order=order, sku_id=sku_id)
+                except OrderGoods.DoesNotExist:
+                    continue
+                order_goods.comment = content
+                order_goods.save()
+        else:
             try:
-                order_goods = OrderGoods.objects.get(order=order, sku_id=sku_id)
+                order_goods = OrderGoods.objects.get(id=order_goods_id, order=order)
             except OrderGoods.DoesNotExist:
-                continue
-
+                return redirect(reverse("user:order", kwargs={"page": 1}))
+            content = request.POST.get('content', '')
             order_goods.comment = content
             order_goods.save()
 
-        order.order_status = 5 # 已完成
+        has_uncommented = OrderGoods.objects.filter(order=order, comment='').exists()
+        order.order_status = 4 if has_uncommented else 5
         order.save()
 
         return redirect(reverse("user:order", kwargs={"page": 1}))
-
-
-
 
 
 

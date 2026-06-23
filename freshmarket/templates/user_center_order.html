@@ -4,46 +4,62 @@
 <div class="right_content clearfix">
 				{% csrf_token %}
 				<h3 class="common_title2">全部订单</h3>
-				{% for order in order_page %}
+				<div class="order_status_tabs clearfix">
+					{% for tab in status_tabs %}
+					<a href="{% url 'user:order' 1 %}{% if tab.key != 'all' %}?status={{ tab.key }}{% endif %}" class="{% if status == tab.key %}active{% endif %}">
+						{{ tab.name }}<em>{{ tab.count }}</em>
+					</a>
+					{% endfor %}
+				</div>
+				{% for item in order_page %}
 				<ul class="order_list_th w978 clearfix">
-					<li class="col01">{{ order.create_time }}</li>
-					<li class="col02">订单号：{{ order.order_id }}</li>
-					<li class="col02 stress">{{ order.status_name }}</li>
+					<li class="col01">{{ item.order.create_time }}</li>
+					<li class="col02">订单号：{{ item.order.order_id }}</li>
+					<li class="col02 stress">{{ item.status_name }}</li>
 				</ul>
 
 				<table class="order_list_table w980">
 					<tbody>
 						<tr>
 							<td width="55%">
-								{% for order_sku in order.order_skus %}
 								<ul class="order_goods_list clearfix">					
-									<li class="col01"><img src="{{ order_sku.sku.image.url }}"></li>
-									<li class="col02">{{ order_sku.sku.name }}<em>{{ order_sku.sku.price }}元/{{ order_sku.sku.unite }}</em></li>
-									<li class="col03">{{ order_sku.count }}</li>
-									<li class="col04">{{ order_sku.amount }}元</li>
+									<li class="col01"><a href="{% url 'goods:detail' item.order_sku.sku.id %}"><img src="{{ item.order_sku.sku.image.url }}"></a></li>
+									<li class="col02"><a href="{% url 'goods:detail' item.order_sku.sku.id %}" class="order_goods_name">{{ item.order_sku.sku.name }}</a><em>{{ item.order_sku.sku.price }}元/{{ item.order_sku.sku.unite }}</em></li>
+									<li class="col03">{{ item.order_sku.count }}</li>
+									<li class="col04">
+										{{ item.order_sku.amount }}元
+										{% if item.order.order_status == 4 %}
+											{% if item.order_sku.comment %}
+											<a href="{% url 'order:comment_item' item.order.order_id item.order_sku.id %}" class="item_comment_btn done">已评价</a>
+											{% else %}
+											<a href="{% url 'order:comment_item' item.order.order_id item.order_sku.id %}" class="item_comment_btn">去评价</a>
+											{% endif %}
+										{% elif item.order.order_status == 5 %}
+											<a href="{% url 'order:comment_item' item.order.order_id item.order_sku.id %}" class="item_comment_btn done">已评价</a>
+										{% endif %}
+									</li>
 								</ul>
-								{% endfor %}
 							</td>
-							<td width="15%">{{ order.total_price|add:order.transit_price }}(含运费:{{ order.transit_price }})元</td>
-							<td width="15%">{{ order.status_name }}</td>
-							<td width="15%"><a href="#" order_id="{{ order.order_id }}" status="{{ order.order_status }}" class="oper_btn">去付款</a></td>
+							<td width="15%">{{ item.total_pay }}(含运费:{{ item.order.transit_price }})元</td>
+							<td width="15%">{{ item.status_name }}</td>
+							<td width="15%"><a href="#" order_id="{{ item.order.order_id }}" status="{{ item.order.order_status }}" class="oper_btn">去付款</a></td>
 						</tr>
 					</tbody>
 				</table>
+				{% empty %}
+				<div class="order_empty">当前分类暂无订单</div>
 				{% endfor %}
-				<div class="pagenation">
-					{% if order_page.has_previous_page %}
-					<a href="{% url 'user:order' order_page.previous_page_number %}">上一页</a>
+				<div class="pagenation compact_pagenation">
+					{% if order_page.has_previous %}
+					<a href="{% url 'user:order' order_page.previous_page_number %}{% if status != 'all' %}?status={{ status }}{% endif %}">上一页</a>
+					{% else %}
+					<span class="disabled">上一页</span>
 					{% endif %}
-					{% for pindex in pages %}
-						{% if pindex == order_page.number %}
-					<a href="{% url 'user:order' pindex %}" class="active">{{ pindex }}</a>
-						{% else %}
-					<a href="{% url 'user:order' pindex %}">{{ pindex }}</a>
-						{% endif %}
-					{% endfor %}
-					{% if order_page.has_next_page %}
-					<a href="{% url 'user:order' order_page.next_page_number %}">下一页></a>
+					<span class="page_info">第 {{ order_page.number }} / {{ num_pages }} 页</span>
+					{% if order_page.has_next %}
+					<a href="{% url 'user:order' order_page.next_page_number %}{% if status != 'all' %}?status={{ status }}{% endif %}">下一页</a>
+					{% else %}
+					<span class="disabled">下一页</span>
 					{% endif %}
 				</div>
 		</div>
@@ -53,18 +69,22 @@
 	<script>
 		$('.oper_btn').each(function () {
         // 获取支付状态
-        status = $(this).attr('status')
+        var status = $(this).attr('status')
         if (status == 1){
             $(this).text('去支付')
         }
+        else if (status == 2 || status == 3){
+            $(this).text('已支付')
+        }
         else if (status == 4){
-            $(this).text('去评价')
+            $(this).text('逐条评价')
         }
         else if (status == 5){
-            $(this).text('已完成')
+            $(this).text('已评价')
         }
     	})
-		$('.oper_btn').click(function() {
+		$('.oper_btn').click(function(event) {
+			event.preventDefault()
 			// 获取status
 			var status = $(this).attr('status')
 			var order_id = $(this).attr('order_id')
@@ -73,34 +93,22 @@
 				// 获取订单id
 				var csrf = $('input[name="csrfmiddlewaretoken"]').val()
 				// 组织参数
-				params = {'order_id': order_id, 'csrfmiddlewaretoken': csrf}
-				// 发起ajax post请求，访问/order/pay 传递参数order_id
-				$.post('/order/pay', params, function(data) {
+				var params = {'order_id': order_id, 'csrfmiddlewaretoken': csrf}
+				// 开发环境模拟支付成功
+				$.post('/order/mock_pay', params, function(data) {
 						if (data.res == 3) {
-							// 引导用户到支付页面
-							window.open(data.pay_url)
-							// 浏览器访问/order/query,获取支付交易的结果
-							// ajax post 传递参数 order_id
-							$.post('/order/check', params, function(data){
-								if (data.res == 3) {
-								    alert('支付成功')
-									location.reload()
-								}
-								else {
-								    alert(data.errmsg)
-								}
-							})
+							alert(data.message)
+							location.reload()
 						}
 						else {
 							alert(data.errmsg)
 						}
+				}).fail(function(xhr) {
+					alert('发起支付失败：' + xhr.status + ' ' + xhr.statusText)
 				})
 			}
 			else if (status == 4){
-				// 其他情况
-				// 跳转到其他页面
-				alert(order_id)
-				location.href = '/order/comment/' + order_id
+				alert('请点击每个商品旁边的“去评价”逐条评价')
 			}
 		})
 	</script>

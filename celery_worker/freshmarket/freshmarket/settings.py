@@ -120,7 +120,7 @@ DATABASES = {
         'HOST': 'localhost',      # 主机
         'PORT': '3306',           # 端口
         'USER': 'root',           # 用户名
-        'PASSWORD': 'As20010504', # 密码
+        'PASSWORD': '123456', # 密码
         'NAME': 'dailyfresh1',   # 使用的数据库
     }
 }

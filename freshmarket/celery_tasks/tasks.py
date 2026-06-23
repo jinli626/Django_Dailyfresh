@@ -16,7 +16,7 @@ import os
 from celery import Celery
 
 
-app = Celery('celery_tasks.tasks',broker='redis://127.0.0.1:6379/0')   #创建对象
+app = Celery('celery_tasks.tasks',broker='redis://:123123@127.0.0.1:6379/0')   #创建对象, Redis 有密码 123123
 
 @app.task
 def send_register_active_email(to_email,username,token):

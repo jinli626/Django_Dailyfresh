@@ -1,0 +1,22 @@
+# Python编译缓存
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Whoosh搜索引擎本地索引
+freshmarket/whoosh_index/
+
+# IDE配置文件
+.idea/
+.vscode/
+
+# 上传媒体资源
+freshmarket/media/
+
+# 密钥隐私文件
+*.pem
+
+# 虚拟环境
+venv/
+env/

@@ -2,9 +2,9 @@
 {% block title %}天天生鲜-商品列表{% endblock title %}
 {% block main_content %}
 	<div class="breadcrumb">
-		<a href="#">全部分类</a>
+		<a href="{% url 'goods:index' %}">全部分类</a>
 		<span>></span>
-		<a href="#">{{ type.name }}</a>
+		<a href="{% url 'goods:list' type.id 1 %}">{{ type.name }}</a>
 	</div>
 
 	<div class="main_wrap clearfix">
@@ -30,7 +30,7 @@
 				<a href="{% url 'goods:list' type.id 1 %}?sort=hot" {% if sort == 'hot' %}class="active"{% endif %}>人气</a>
 			</div>
 
-			<ul class="goods_type_list clearfix">
+			<ul class="goods_type_list">
                 {% for sku in skus_page %}
 				<li>
 					<a href="{% url 'goods:detail' sku.id %}"><img src="{{ sku.image.url }}"></a>
@@ -44,6 +44,7 @@
                 {% endfor %}
 			</ul>
 
+			{% if skus_page.paginator.num_pages > 1 %}
 			<div class="pagenation">
                 {% if skus_page.has_previous %}
 				<a href="{% url 'goods:list' type.id skus_page.previous_page_number %}?sort={{ sort }}">上一页</a>
@@ -59,6 +60,7 @@
 				<a href="{% url 'goods:list' type.id skus_page.next_page_number %}?sort={{ sort }}">下一页></a>
                 {% endif %}
 			</div>
+			{% endif %}
 		</div>
 	</div>
 {% endblock main_content %}

@@ -6,85 +6,93 @@
 
 {% block main_content %}
 	<div class="breadcrumb">
-		<a href="#">全部分类</a>
+		<a href="{% url 'goods:index' %}">全部分类</a>
 		<span>></span>
-		<a href="#">{{ sku.type.name }}</a>
+		<a href="{% url 'goods:list' sku.type.id 1 %}">{{ sku.type.name }}</a>
 		<span>></span>
 		<a href="#">商品详情</a>
 	</div>
 
-	<div class="goods_detail_con clearfix">
-		<div class="goods_detail_pic fl"><img src="{{ sku.image.url }}"></div>
-
-		<div class="goods_detail_list fr">
-			<h3>{{ sku.name }}</h3>
-			<p>{{ sku.desc }}</p>
-			<div class="prize_bar">
-				<span class="show_pirze">¥<em>{{ sku.price }}</em></span>
-				<span class="show_unit">单  位：{{ sku.unite }}</span>
+	<div class="product_page">
+		<div class="product_hero">
+			<div class="product_media">
+				<img src="{{ sku.image.url }}" alt="{{ sku.name }}">
 			</div>
-			<div class="goods_num clearfix">
-				<div class="num_name fl">数 量：</div>
-				<div class="num_add fl">
-					<input type="text" class="num_show fl" value="1">
-					<a href="javascript:;" class="add fr">+</a>
-					<a href="javascript:;" class="minus fr">-</a>	
-				</div> 
-			</div>
-            <div>
-                <p>其他规格:</p>
-                <ul>
-                    {% for sku in same_spu_skus %}
-                        <li><a href="{% url 'goods:detail' sku.id %}">{{ sku.name }}</a></li>
-                    {% endfor %}
-                </ul>
-            </div>
 
-			<div class="total">总价：<em>16.80元</em></div>
-			<div class="operate_btn">
-                {% csrf_token %}
-				<a href="javascript:;" class="buy_btn">立即购买</a>
-				<a href="javascript:;" sku_id="{{ sku.id }}" class="add_cart" id="add_cart">加入购物车</a>
+			<div class="product_summary">
+				<h2>{{ sku.name }}</h2>
+				<p class="product_desc">{{ sku.desc }}</p>
+				<div class="product_price">
+					<span class="show_pirze">¥<em>{{ sku.price }}</em></span>
+					<span class="show_unit">单位：{{ sku.unite }}</span>
+				</div>
+
+				<div class="product_control">
+					<span class="control_label">数量：</span>
+					<div class="num_add">
+						<input type="text" class="num_show" value="1">
+						<div class="num_actions">
+							<a href="javascript:;" class="add">+</a>
+							<a href="javascript:;" class="minus">-</a>
+						</div>
+					</div>
+				</div>
+
+				<div class="product_specs">
+					<span>其他规格：</span>
+					{% for spec_sku in same_spu_skus %}
+						<a href="{% url 'goods:detail' spec_sku.id %}">{{ spec_sku.name }}</a>
+					{% empty %}
+						<em>暂无其他规格</em>
+					{% endfor %}
+				</div>
+
+				<div class="total product_total">总价：<em>16.80元</em></div>
+				<div class="operate_btn product_actions">
+					{% csrf_token %}
+					<a href="javascript:;" class="buy_btn">立即购买</a>
+					<a href="javascript:;" sku_id="{{ sku.id }}" class="add_cart" id="add_cart">加入购物车</a>
+				</div>
 			</div>
 		</div>
-	</div>
 
-	<div class="main_wrap clearfix">
-		<div class="l_wrap fl clearfix">
-			<div class="new_goods">
+		<div class="product_body">
+			<div class="product_recs">
 				<h3>新品推荐</h3>
 				<ul>
-                    {% for sku in new_skus %}
+					{% for new_sku in new_skus %}
 					<li>
-						<a href="{% url 'goods:detail' sku.id %}"><img src="{{ sku.image.url }}"></a>
-						<h4><a href="{% url 'goods:detail' sku.id %}">{{ sku.name }}</a></h4>
-						<div class="prize">￥{{ sku.price }}</div>
+						<a href="{% url 'goods:detail' new_sku.id %}"><img src="{{ new_sku.image.url }}" alt="{{ new_sku.name }}"></a>
+						<h4><a href="{% url 'goods:detail' new_sku.id %}">{{ new_sku.name }}</a></h4>
+						<div class="prize">￥{{ new_sku.price }}</div>
 					</li>
 					{% endfor %}
 				</ul>
 			</div>
-		</div>
 
-		<div class="r_wrap fr clearfix">
-			<ul class="detail_tab clearfix">
-				<li id="tag_detail" class="active">商品介绍</li>
-				<li id="tag_comment">评论</li>
-			</ul>
+			<div class="product_detail_panel">
+				<ul class="detail_tab clearfix">
+					<li id="tag_detail" class="active">商品介绍</li>
+					<li id="tag_comment">评论</li>
+				</ul>
 
-			<div class="tab_content" id="tab_detail">
-				<dl>
-					<dt>商品详情：</dt>
-                    <dd>{{ sku.goods.detail|safe }}</dd>
-				</dl>
-			</div>
+				<div class="tab_content" id="tab_detail">
+					<dl>
+						<dt>商品详情：</dt>
+						<dd>{{ sku.goods.detail|safe }}</dd>
+					</dl>
+				</div>
 
-            <div class="tab_content" id="tab_comment" style="display: none;">
-				<dl>
-                    {% for order in sku_orders %}
-					<dt>评论时间：{{ order.update_time }}&nbsp;&nbsp;用户名:{{ order.order.user.username }}</dt>
-                    <dd>评论内容:{{ order.comment }}</dd>
-                    {% endfor %}
-				</dl>
+				<div class="tab_content" id="tab_comment" style="display: none;">
+					<dl>
+						{% for order in sku_orders %}
+						<dt>评论时间：{{ order.update_time }}&nbsp;&nbsp;用户名:{{ order.order.user.username }}</dt>
+						<dd>评论内容:{{ order.comment }}</dd>
+						{% empty %}
+						<dd>暂无评论</dd>
+						{% endfor %}
+					</dl>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -173,17 +181,28 @@
 		var $to_y = $('#show_count').offset().left;
 
 
-		$('#add_cart').click(function(){
+		function add_to_cart(success_callback) {
             // 获取商品id和商品数量
-            sku_id = $(this).attr('sku_id') // attr prop
-            count = $('.num_show').val()
-            csrf = $('input[name="csrfmiddlewaretoken"]').val()
+            var sku_id = $('#add_cart').attr('sku_id')
+            var count = $('.num_show').val()
+            var csrf = $('input[name="csrfmiddlewaretoken"]').val()
             // 组织参数
-            params = {'sku_id':sku_id, 'count':count, 'csrfmiddlewaretoken':csrf}
+            var params = {'sku_id':sku_id, 'count':count, 'csrfmiddlewaretoken':csrf}
             // 发起ajax post请求，访问/cart/add, 传递参数:sku_id count
             $.post('/cart/add', params, function (data) {
                 if (data.res == 5){
-                    // 添加成功
+                    success_callback(data, sku_id, csrf)
+                }
+                else{
+                    // 添加失败
+                    alert(data.errmsg)
+                }
+            })
+		}
+
+		$('#add_cart').click(function(){
+            add_to_cart(function(data) {
+				// 添加成功
                     $(".add_jump").css({'left':$add_y+80,'top':$add_x+10,'display':'block'})
                     $(".add_jump").stop().animate({
                         'left': $to_y+7,
@@ -194,11 +213,35 @@
                                 $('#show_count').html(data.total_count);
                             });
 			        });
-                }
-                else{
-                    // 添加失败
+            })
+		})
+
+		$('.buy_btn').click(function(){
+            var sku_id = $('#add_cart').attr('sku_id')
+            var count = $('.num_show').val()
+            var csrf = $('input[name="csrfmiddlewaretoken"]').val()
+            var params = {'sku_id': sku_id, 'count': count, 'csrfmiddlewaretoken': csrf}
+            $.post('/cart/update', params, function(data) {
+                if (data.res != 5) {
                     alert(data.errmsg)
+                    return
                 }
+                var $form = $('<form>', {
+                    method: 'post',
+                    action: '{% url "order:place" %}'
+                })
+                $form.append($('<input>', {
+                    type: 'hidden',
+                    name: 'csrfmiddlewaretoken',
+                    value: csrf
+                }))
+                $form.append($('<input>', {
+                    type: 'hidden',
+                    name: 'sku_ids',
+                    value: sku_id
+                }))
+                $('body').append($form)
+                $form.submit()
             })
 		})
 	</script>

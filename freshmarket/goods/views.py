@@ -18,6 +18,10 @@ class IndexView(View):
         # 获取首页促销活动信息
         promotion_banners = IndexPromotionBanner.objects.all().order_by('index')
 
+        # 首页专题专区
+        featured_skus = GoodsSKU.objects.filter(status=1).order_by('-sales', '-id')[:6]
+        lottery_skus = GoodsSKU.objects.filter(status=1).order_by('-id')[:3]
+
 
 
 
@@ -50,19 +54,20 @@ class IndexView(View):
         user = request.user
 
         #从 Redis数据库中获取用户购物车数据
+        cart_count = 0  #未登录用户默认购物车数量为0
         if user.is_authenticated:
             conn = get_redis_connection('default')
             cart_key = 'cart_%d' % user.id
-            cart_count =conn.hlen(cart_key)  #获取总数
+            for count in conn.hvals(cart_key):
+                cart_count += int(count)
 
         #组织上下文字典
         context = {'types': types,
                    'goods_banners': goods_banners,
                    'promotion_banners': promotion_banners,
+                   'featured_skus': featured_skus,
+                   'lottery_skus': lottery_skus,
                    'cart_count':cart_count}
-        print(cart_count)
-
-
         return render(request, 'index.html', context)
 
 
@@ -96,8 +101,9 @@ class DetailView(View):
         user = request.user
         if user.is_authenticated:
             conn = get_redis_connection('default')
-            cart_key = 'cart-%d' % user.id
-            cart_count = conn.hlen(cart_key)  # 获取总数
+            cart_key = 'cart_%d' % user.id
+            for count in conn.hvals(cart_key):
+                cart_count += int(count)
 
             # 添加用户的浏览记录
             conn = get_redis_connection('default')
@@ -132,92 +138,6 @@ class DetailView(View):
 #list页面数据
 
 class ListView(View):
-
-    #先检查下商品种类是否存在
-    def get(self,request,type_id,page):
-        try:
-            type = GoodsType.objects.get(id=type_id)
-        except GoodsType.DoesNotExist:
-            #商品种类不存在
-            print(type_id)
-            print(page)
-            print("商品种类不存在")
-            return redirect(reverse('goods:index'))
-
-        #查询出商品种类
-        types = GoodsType.objects.all()
-
-        #从前端获取指定的分页逻辑参数
-        sort = request.get('sort')
-        #价格
-        if sort == "price":
-            skus = GoodsSKU.objects.filter(type=type).order_by('price')
-        #商品热度
-        elif sort == "hot":
-            skus = GoodsSKU.objects.filter(type=type).order_by('-sales')
-        #商品id
-        else:
-            skus = GoodsSKU.objects.filter(type=type).order_by('-id')
-
-
-        #分页功能
-        paginator = Paginator(skus,1)
-        # 获取第page页的内容
-        try:
-            page = int(page)
-        except Exception as e:
-            page = 1
-
-        if page > paginator.num_pages:
-            page = 1
-
-        # 获取第page页的Page实例对象
-        skus_page = paginator.page(page)
-
-        # todo: 进行页码的控制，页面上最多显示5个页码
-        # 1.总页数小于5页，页面上显示所有页码
-        # 2.如果当前页是前3页，显示1-5页
-        # 3.如果当前页是后3页，显示后5页
-        # 4.其他情况，显示当前页的前2页，当前页，当前页的后2页
-        num_pages = paginator.num_pages
-        if num_pages < 5:
-            pages = range(1, num_pages + 1)
-        elif page <= 3:
-            pages = range(1, 6)
-        elif num_pages - page <= 2:
-            pages = range(num_pages - 4, num_pages + 1)
-        else:
-            pages = range(page - 2, page + 3)
-
-        # 获取新品信息
-        new_skus = GoodsSKU.objects.filter(type=type).order_by('-create_time')[:2]
-
-        # 获取用户购物车中商品的数目
-        user = request.user
-        cart_count = 0
-        if user.is_authenticated():
-            # 用户已登录
-            conn = get_redis_connection('default')
-            cart_key = 'cart_%d' % user.id
-            cart_count = conn.hlen(cart_key)
-
-        # 组织模板上下文
-        context = {'type': type, 'types': types,
-                   'skus_page': skus_page,
-                   'new_skus': new_skus,
-                   'cart_count': cart_count,
-                   'pages': pages,
-                   'sort': sort}
-
-        # 使用模板
-        return render(request, 'list.html', context)
-
-
-
-
-
-
-class ListView(View):
     '''列表页'''
     def get(self, request, type_id, page):
         '''显示列表页'''
@@ -245,8 +165,8 @@ class ListView(View):
             sort = 'default'
             skus = GoodsSKU.objects.filter(type=type).order_by('-id')
 
-        # 对数据进行分页
-        paginator = Paginator(skus, 1)
+        # 列表页一屏展示 8 个商品，避免商品很少时右侧大片空白还分页
+        paginator = Paginator(skus, 8)
 
         # 获取第page页的内容
         try:
@@ -281,11 +201,12 @@ class ListView(View):
         # 获取用户购物车中商品的数目
         user = request.user
         cart_count = 0
-        if user.is_authenticated():
+        if user.is_authenticated:
             # 用户已登录
             conn = get_redis_connection('default')
             cart_key = 'cart_%d' % user.id
-            cart_count = conn.hlen(cart_key)
+            for count in conn.hvals(cart_key):
+                cart_count += int(count)
 
         # 组织模板上下文
         context = {'type':type, 'types':types,
@@ -297,9 +218,5 @@ class ListView(View):
 
         # 使用模板
         return render(request, 'list.html', context)
-
-
-
-
 
 

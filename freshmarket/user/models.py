@@ -1,20 +1,21 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from db.base_model import BaseModel
-from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
+from itsdangerous import URLSafeTimedSerializer as Serializer
 from django.conf import settings
+
 
 class User(AbstractUser, BaseModel):
     '''用户模型类'''
 
     """生成用户签名字符串"""
-    #下面的这个方法，教学已经删除
+
+    # 下面的这个方法，教学已经删除
     def generate(self):
-        serializer = serializer = Serializer(settings.SECRET_KEY,3600)
-        info = {'confirm':self.id}
+        serializer = serializer = Serializer(settings.SECRET_KEY, 3600)
+        info = {'confirm': self.id}
         token = serializer.dumps(info)
         return token.decode()
-
 
     class Meta:
         db_table = 'df_user'
@@ -22,10 +23,9 @@ class User(AbstractUser, BaseModel):
         verbose_name_plural = verbose_name
 
 
-
-
 class AddressManager(models.Manager):
     """地址模型管理器类"""
+
     # 1. 改变原有查询的结果集:all()
     # 2. 封装方法：用户操作模型类对应的数据表(增删改查)
     def get_default_address(self, user):
@@ -56,4 +56,3 @@ class Address(BaseModel):
         db_table = 'df_address'
         verbose_name = '地址'
         verbose_name_plural = verbose_name
-
