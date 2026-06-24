@@ -10,7 +10,7 @@ from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.encoding import force_str
 
-#修改内容---导入jieba分词模块
+# 修改内容---导入jieba分词模块
 from jieba.analyse import ChineseAnalyzer
 
 from haystack.backends import (
@@ -237,7 +237,7 @@ class WhooshSearchBackend(BaseSearchBackend):
             else:
                 schema_fields[field_class.index_fieldname] = TEXT(
                     stored=True,
-                    analyzer=ChineseAnalyzer(),   #修改成 jieba 模块下的函数
+                    analyzer=ChineseAnalyzer(),  # 修改成 jieba 模块下的函数
                     field_boost=field_class.boost,
                     sortable=True,
                 )

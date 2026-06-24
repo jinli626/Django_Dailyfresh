@@ -2,6 +2,7 @@ from django.contrib.auth.decorators import login_required
 from django.urls import re_path
 
 from user.views import (
+    AccountCancelView,
     ActiveView,
     LoginView,
     RegisterView,
@@ -22,5 +23,6 @@ urlpatterns = [
     re_path(r'^order$', login_required(UserOrderView.as_view()), name='order'),
     re_path(r'^address$', UserAddressView.as_view(), name='address'),
     re_path(r'^logout$', logout_view, name='logout'),
+    re_path(r'^cancel$', AccountCancelView.as_view(), name='cancel'),
     re_path(r'^order/(?P<page>\d+)$', UserOrderView.as_view(), name='order'),
 ]

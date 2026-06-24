@@ -266,3 +266,19 @@ class UserAddressView(LoginRequiredMixin, View):
             is_default=Address.objects.get_default_address(user) is None
         )
         return redirect(reverse('user:address'))
+
+
+class AccountCancelView(LoginRequiredMixin, View):
+    """注销当前账号：彻底删除账号并退出登录。"""
+
+    def post(self, request):
+        user = request.user
+        user_id = user.id
+
+        conn = get_redis_connection('default')
+        conn.delete('cart_%d' % user_id)
+        conn.delete('history_%d' % user_id)
+
+        logout(request)
+        user.delete()
+        return redirect(reverse('goods:index'))

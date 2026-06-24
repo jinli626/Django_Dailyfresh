@@ -191,8 +191,8 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.qq.com'
 EMAIL_PORT = 465
 EMAIL_USE_SSL = True  # 推荐使用 SSL
-EMAIL_HOST_USER = '2197381455@qq.com'
-EMAIL_HOST_PASSWORD = 'sgcaxewrbunaeadf'
+EMAIL_HOST_USER = '1032828817@qq.com'
+EMAIL_HOST_PASSWORD = 'xdmrhttebcfkbbag'
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 # Celery 配置
