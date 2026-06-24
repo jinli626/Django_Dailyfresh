@@ -1092,6 +1092,17 @@ a,input{
 	box-shadow:0 8px 18px rgba(47,172,69,.22);
 }
 
+.oper_btn.oper_btn_primary{
+	background:#1f7ae0 !important;
+	color:#fff !important;
+}
+
+.oper_btn.oper_btn_primary:hover{
+	background:#1766bf !important;
+	color:#fff !important;
+	box-shadow:0 8px 18px rgba(31,122,224,.22);
+}
+
 .order_status_tabs{
 	display:flex;
 	gap:10px;

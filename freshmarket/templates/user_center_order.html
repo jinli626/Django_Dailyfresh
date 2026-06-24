@@ -15,34 +15,26 @@
 				<ul class="order_list_th w978 clearfix">
 					<li class="col01">{{ item.order.create_time }}</li>
 					<li class="col02">订单号：{{ item.order.order_id }}</li>
-					<li class="col02 stress">{{ item.status_name }}</li>
 				</ul>
 
 				<table class="order_list_table w980">
 					<tbody>
 						<tr>
-							<td width="55%">
+							<td width="60%">
 								<ul class="order_goods_list clearfix">					
 									<li class="col01"><a href="{% url 'goods:detail' item.order_sku.sku.id %}"><img src="{{ item.order_sku.sku.image.url }}"></a></li>
 									<li class="col02"><a href="{% url 'goods:detail' item.order_sku.sku.id %}" class="order_goods_name">{{ item.order_sku.sku.name }}</a><em>{{ item.order_sku.sku.price }}元/{{ item.order_sku.sku.unite }}</em></li>
 									<li class="col03">{{ item.order_sku.count }}</li>
-									<li class="col04">
-										{{ item.order_sku.amount }}元
-										{% if item.order.order_status == 4 %}
-											{% if item.order_sku.comment %}
-											<a href="{% url 'order:comment_item' item.order.order_id item.order_sku.id %}" class="item_comment_btn done">已评价</a>
-											{% else %}
-											<a href="{% url 'order:comment_item' item.order.order_id item.order_sku.id %}" class="item_comment_btn">去评价</a>
-											{% endif %}
-										{% elif item.order.order_status == 5 %}
-											<a href="{% url 'order:comment_item' item.order.order_id item.order_sku.id %}" class="item_comment_btn done">已评价</a>
-										{% endif %}
-									</li>
+									<li class="col04">{{ item.order_sku.amount }}元</li>
 								</ul>
 							</td>
-							<td width="15%">{{ item.total_pay }}(含运费:{{ item.order.transit_price }})元</td>
-							<td width="15%">{{ item.status_name }}</td>
-							<td width="15%"><a href="#" order_id="{{ item.order.order_id }}" status="{{ item.order.order_status }}" class="oper_btn">去付款</a></td>
+							<td width="25%">{{ item.total_pay }}(含运费:{{ item.order.transit_price }})元</td>
+							<td width="15%">
+								<a href="{% if item.order.order_status == 4 %}{% url 'order:comment' item.order.order_id %}{% else %}#{% endif %}"
+								   order_id="{{ item.order.order_id }}"
+								   status="{{ item.order.order_status }}"
+								   class="oper_btn{% if item.order.order_status == 1 or item.order.order_status == 4 %} oper_btn_primary{% endif %}">去付款</a>
+							</td>
 						</tr>
 					</tbody>
 				</table>
@@ -72,23 +64,27 @@
         var status = $(this).attr('status')
         if (status == 1){
             $(this).text('去支付')
+            $(this).addClass('oper_btn_primary')
+            $(this).css({'background':'#1f7ae0','color':'#fff'})
         }
         else if (status == 2 || status == 3){
             $(this).text('已支付')
         }
         else if (status == 4){
-            $(this).text('逐条评价')
+            $(this).text('去评价')
+            $(this).addClass('oper_btn_primary')
+            $(this).css({'background':'#1f7ae0','color':'#fff'})
         }
         else if (status == 5){
             $(this).text('已评价')
         }
     	})
 		$('.oper_btn').click(function(event) {
-			event.preventDefault()
 			// 获取status
 			var status = $(this).attr('status')
 			var order_id = $(this).attr('order_id')
 			if (status == 1){
+				event.preventDefault()
 				// 进行支付
 				// 获取订单id
 				var csrf = $('input[name="csrfmiddlewaretoken"]').val()
@@ -107,8 +103,8 @@
 					alert('发起支付失败：' + xhr.status + ' ' + xhr.statusText)
 				})
 			}
-			else if (status == 4){
-				alert('请点击每个商品旁边的“去评价”逐条评价')
+			else if (status != 4){
+				event.preventDefault()
 			}
 		})
 	</script>

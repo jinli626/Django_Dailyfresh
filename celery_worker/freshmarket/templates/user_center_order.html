@@ -8,13 +8,12 @@
 				<ul class="order_list_th w978 clearfix">
 					<li class="col01">{{ order.create_time }}</li>
 					<li class="col02">订单号：{{ order.order_id }}</li>
-					<li class="col02 stress">{{ order.status_name }}</li>
 				</ul>
 
 				<table class="order_list_table w980">
 					<tbody>
 						<tr>
-							<td width="55%">
+							<td width="60%">
 								{% for order_sku in order.order_skus %}
 								<ul class="order_goods_list clearfix">					
 									<li class="col01"><img src="{{ order_sku.sku.image.url }}"></li>
@@ -24,9 +23,13 @@
 								</ul>
 								{% endfor %}
 							</td>
-							<td width="15%">{{ order.total_price|add:order.transit_price }}(含运费:{{ order.transit_price }})元</td>
-							<td width="15%">{{ order.status_name }}</td>
-							<td width="15%"><a href="#" order_id="{{ order.order_id }}" status="{{ order.order_status }}" class="oper_btn">去付款</a></td>
+							<td width="25%">{{ order.total_price|add:order.transit_price }}(含运费:{{ order.transit_price }})元</td>
+							<td width="15%">
+								<a href="{% if order.order_status == 4 %}{% url 'order:comment' order.order_id %}{% else %}#{% endif %}"
+								   order_id="{{ order.order_id }}"
+								   status="{{ order.order_status }}"
+								   class="oper_btn{% if order.order_status == 1 or order.order_status == 4 %} oper_btn_primary{% endif %}">去付款</a>
+							</td>
 						</tr>
 					</tbody>
 				</table>
@@ -56,19 +59,24 @@
         status = $(this).attr('status')
         if (status == 1){
             $(this).text('去支付')
+            $(this).addClass('oper_btn_primary')
+            $(this).css({'background':'#1f7ae0','color':'#fff'})
         }
         else if (status == 4){
             $(this).text('去评价')
+            $(this).addClass('oper_btn_primary')
+            $(this).css({'background':'#1f7ae0','color':'#fff'})
         }
         else if (status == 5){
-            $(this).text('已完成')
+            $(this).text('已评价')
         }
     	})
-		$('.oper_btn').click(function() {
+		$('.oper_btn').click(function(event) {
 			// 获取status
 			var status = $(this).attr('status')
 			var order_id = $(this).attr('order_id')
 			if (status == 1){
+				event.preventDefault()
 				// 进行支付
 				// 获取订单id
 				var csrf = $('input[name="csrfmiddlewaretoken"]').val()
@@ -96,11 +104,8 @@
 						}
 				})
 			}
-			else if (status == 4){
-				// 其他情况
-				// 跳转到其他页面
-				alert(order_id)
-				location.href = '/order/comment/' + order_id
+			else if (status != 4){
+				event.preventDefault()
 			}
 		})
 	</script>
