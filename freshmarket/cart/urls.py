@@ -1,13 +1,11 @@
+from django.urls import re_path
 
-from django.contrib import admin
-from django.urls import path,include,re_path
-from .views import *
+from cart.views import CartAddView, CartDeleteView, CartInfoView, CartUpdateView
+
 
 urlpatterns = [
-    re_path(r'^add$', CartAddView.as_view(), name='add'), # 购物车记录添加
-    re_path(r'^$', CartInfoView.as_view(), name='show'), # 购物车页面显示
-    re_path(r'^update$', CartUpdateView.as_view(), name='update'), # 购物车记录更新
-    re_path(r'^delete$', CartDeleteView.as_view(), name='delete'), # 购物车记录删除
-
-
+    re_path(r'^add$', CartAddView.as_view(), name='add'),
+    re_path(r'^$', CartInfoView.as_view(), name='show'),
+    re_path(r'^update$', CartUpdateView.as_view(), name='update'),
+    re_path(r'^delete$', CartDeleteView.as_view(), name='delete'),
 ]

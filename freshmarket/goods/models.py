@@ -3,14 +3,14 @@ from tinymce.models import HTMLField
 from db.base_model import BaseModel
 from django.utils.encoding import force_str as force_text
 
-
 """
 知识补充
 富文本编辑器编辑过的数据，本质上带HTML标签指定样式的数据，可以直接在前端进行渲染
 
 """
 
-#商品类型
+
+# 商品类型
 class GoodsType(BaseModel):
     '''商品类型模型类'''
     name = models.CharField(max_length=20, verbose_name='种类名称')
@@ -26,29 +26,28 @@ class GoodsType(BaseModel):
         return self.name
 
 
-
-#商品SPU表
+# 商品SPU表
 class Goods(BaseModel):
-    name = models.CharField(max_length=30,verbose_name="商品SPU名称")
-    detail = HTMLField(blank=True,verbose_name="商品详情")  #引入富文本编辑工具
+    name = models.CharField(max_length=30, verbose_name="商品SPU名称")
+    detail = HTMLField(blank=True, verbose_name="商品详情")  # 引入富文本编辑工具
 
     class Meta:
-        db_table ='df_goods'
-        verbose_name ='商品SPU'
-        verbose_name_plural =verbose_name
+        db_table = 'df_goods'
+        verbose_name = '商品SPU'
+        verbose_name_plural = verbose_name
 
     def __str__(self):
         return self.name
 
 
-#商品SKU表
+# 商品SKU表
 class GoodsSKU(BaseModel):
-    status_choices =(
-        (0,'下线'),
-        (1,'上线'),
+    status_choices = (
+        (0, '下线'),
+        (1, '上线'),
     )
 
-    type = models.ForeignKey('GoodsType',on_delete=models.CASCADE,verbose_name='商品种类')
+    type = models.ForeignKey('GoodsType', on_delete=models.CASCADE, verbose_name='商品种类')
     goods = models.ForeignKey('Goods', on_delete=models.CASCADE, verbose_name='商品SPU')
     name = models.CharField(max_length=20, verbose_name='商品名称')
     desc = models.CharField(max_length=256, verbose_name='商品简介')
@@ -68,12 +67,10 @@ class GoodsSKU(BaseModel):
         return self.name
 
 
-
-#商品图片模型类
+# 商品图片模型类
 class GoodsImage(BaseModel):
-    sku = models.ForeignKey('GoodsSKU',on_delete=models.CASCADE,verbose_name="商品")
-    image = models.ImageField(upload_to="goods",verbose_name="图片路径")
-
+    sku = models.ForeignKey('GoodsSKU', on_delete=models.CASCADE, verbose_name="商品")
+    image = models.ImageField(upload_to="goods", verbose_name="图片路径")
 
     class Meta:
         db_table = 'df_goods_img'
@@ -81,10 +78,10 @@ class GoodsImage(BaseModel):
         verbose_name_plural = verbose_name
 
 
-#首页轮播商品展示模型类
+# 首页轮播商品展示模型类
 class IndexGoodsBanner(BaseModel):
     '''首页轮播商品展示模型类'''
-    sku = models.ForeignKey('GoodsSKU', on_delete=models.CASCADE,verbose_name='商品')
+    sku = models.ForeignKey('GoodsSKU', on_delete=models.CASCADE, verbose_name='商品')
     image = models.ImageField(upload_to='banner', verbose_name='图片')
     index = models.SmallIntegerField(default=0, verbose_name='展示顺序')
 
@@ -94,7 +91,7 @@ class IndexGoodsBanner(BaseModel):
         verbose_name_plural = verbose_name
 
 
-#首页分类商品展示模型类
+# 首页分类商品展示模型类
 class IndexTypeGoodsBanner(BaseModel):
     '''首页分类商品展示模型类'''
     DISPLAY_TYPE_CHOICES = (
@@ -102,8 +99,8 @@ class IndexTypeGoodsBanner(BaseModel):
         (1, "图片")
     )
 
-    type = models.ForeignKey('GoodsType', on_delete=models.CASCADE,verbose_name='商品类型')
-    sku = models.ForeignKey('GoodsSKU',on_delete=models.CASCADE, verbose_name='商品SKU')
+    type = models.ForeignKey('GoodsType', on_delete=models.CASCADE, verbose_name='商品类型')
+    sku = models.ForeignKey('GoodsSKU', on_delete=models.CASCADE, verbose_name='商品SKU')
     display_type = models.SmallIntegerField(default=1, choices=DISPLAY_TYPE_CHOICES, verbose_name='展示类型')
     index = models.SmallIntegerField(default=0, verbose_name='展示顺序')
 
@@ -113,7 +110,7 @@ class IndexTypeGoodsBanner(BaseModel):
         verbose_name_plural = verbose_name
 
 
-#首页促销活动模型类
+# 首页促销活动模型类
 class IndexPromotionBanner(BaseModel):
     '''首页促销活动模型类'''
     name = models.CharField(max_length=20, verbose_name='活动名称')

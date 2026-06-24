@@ -1,5 +1,6 @@
 from django.db import models
 
+
 class BaseModel(models.Model):
     """模型抽象基类
         使所有模型类继承这些字段"""

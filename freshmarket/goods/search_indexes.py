@@ -3,7 +3,8 @@ from haystack import indexes
 # 导入模型类
 from goods.models import GoodsSKU
 
-#指定对于某个类的某些数据建立索引
+
+# 指定对于某个类的某些数据建立索引
 class GoodsSKUIndex(indexes.SearchIndex, indexes.Indexable):
     # 索引字段
     # use_template=True指定根据表中的那些字段建立索引文件，把说明放在一个文件中
