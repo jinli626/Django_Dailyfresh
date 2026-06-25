@@ -7,7 +7,23 @@
 	{# 网页标题内容块 #}
 	<title>{% block title %}{% endblock title %}</title>
 	<link rel="stylesheet" type="text/css" href="{% static 'css/reset.css' %}">
-	<link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}">
+	<link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}?v=20260625-shadow-fix">
+	<style>
+		.goods_list li:hover,.goods_list li:focus,.goods_list li:focus-visible,.goods_list li:active,
+		.goods_type_list li:hover,.goods_type_list li:focus,.goods_type_list li:focus-visible,
+		.featured_grid li:hover,.featured_grid li:focus,.featured_grid li:focus-visible{
+			outline:none!important;border:0!important;border-right:1px solid #eef1ee!important;
+			border-color:transparent!important;
+			box-shadow:0 2px 6px rgba(30,70,38,.04),0 8px 18px rgba(30,70,38,.08),0 14px 32px rgba(30,70,38,.12)!important;transform:translateY(-4px)!important;
+		}
+		.featured_grid li:hover,.featured_grid li:focus,.featured_grid li:focus-visible{
+			border:1px solid #edf3ed!important;
+			box-shadow:0 2px 6px rgba(33,86,41,.04),0 8px 18px rgba(33,86,41,.08),0 14px 32px rgba(33,86,41,.12)!important;transform:translateY(-4px)!important;
+		}
+		.goods_list li a:focus,.goods_list li a:focus-visible,
+		.goods_type_list li a:focus,.goods_type_list li a:focus-visible,
+		.featured_grid li a:focus,.featured_grid li a:focus-visible{outline:none!important;}
+	</style>
 	{# <网页顶部引入文件></网页顶部引入文件>块 #}
 	{% block topfiles %}{% endblock topfiles %}
 </head>
@@ -22,9 +38,7 @@
 				<div class="login_btn fl">
 					欢迎您：<em>{{ user.username }}</em>
 					<span>|</span>
-					<!--
-					暂时注释掉，因为功能不齐全
-					<a href="{ url 'user:logout' }">退出</a>-->
+					<a href="{% url 'user:logout' %}">退出</a>
 				</div>
 				{% else %}
 				<div class="login_btn fl">
@@ -35,15 +49,14 @@
 				{% endif %}
 				<div class="user_link fl">
 					<span>|</span>
-
-                    <!--暂时注销
-
-                    <a href="{ url 'user:user' %}">用户中心</a>
+                    <a href="{% url 'goods:index' %}">首页</a>
 					<span>|</span>
-					<a href="{ url 'cart:show' %}">我的购物车</a>
+                    <a href="{% url 'user:user' %}">用户中心</a>
 					<span>|</span>
-					<a href="{ url 'user:order' 1 %}">我的订单</a>
-                    -->
+					<a href="{% url 'cart:show' %}">我的购物车</a>
+					<span>|</span>
+					<a href="{% url 'user:order' 1 %}">我的订单</a>
+
 
 				</div>
 			</div>
@@ -54,7 +67,7 @@
 {# 网页顶部搜索块 #}
 {% block search_bar %}
 	<div class="search_bar clearfix">
-		<a href="index.html" class="logo fl"><img src="{% static 'images/logo.png' %}"></a>
+		<a href="{% url 'goods:index' %}" class="logo fl"><img src="{% static 'images/logo.png' %}"></a>
 		<div class="search_con fl">
 			<form method="get" action="/search">
 			<input type="text" class="input_text fl" name="q" placeholder="搜索商品">
@@ -62,7 +75,7 @@
 			</form>
 		</div>
 		<div class="guest_cart fr">
-			<a href="#" class="cart_name fl">我的购物车</a>
+			<a href="{% url 'cart:show' %}" class="cart_name fl">我的购物车</a>
 			<div class="goods_count fl" id="show_count">{{ cart_count }}</div>
 		</div>
 	</div>
@@ -71,6 +84,8 @@
 {# 网页主体内容块 #}
 {% block body %}
 {% endblock body %}
+
+	<button type="button" class="back_top_btn" id="back_top_btn" title="回到顶部">↑</button>
 
 	<div class="footer">
 		<div class="foot_link">
@@ -92,5 +107,44 @@
 {# 网页底部引入文件块 #}
 {% block bottomfiles %}
 {% endblock bottomfiles %}
+<script type="text/javascript">
+	(function () {
+		var backTopBtn = document.getElementById('back_top_btn');
+		if (!backTopBtn) {
+			return;
+		}
+
+		function toggleBackTop() {
+			if (window.pageYOffset > 420 || document.documentElement.scrollTop > 420) {
+				backTopBtn.classList.add('show');
+			} else {
+				backTopBtn.classList.remove('show');
+			}
+		}
+
+		window.addEventListener('scroll', toggleBackTop);
+		backTopBtn.addEventListener('click', function () {
+			window.scrollTo({top: 0, behavior: 'smooth'});
+		});
+		toggleBackTop();
+	})();
+</script>
+<script type="text/javascript">
+	(function () {
+		var searchForms = document.querySelectorAll('.search_con form');
+		for (var i = 0; i < searchForms.length; i++) {
+			searchForms[i].addEventListener('submit', function (event) {
+				var input = this.querySelector('input[name="q"]');
+				if (!input || input.value.replace(/\s+/g, '') === '') {
+					event.preventDefault();
+					if (input) {
+						input.value = '';
+						input.focus();
+					}
+				}
+			});
+		}
+	})();
+</script>
 </body>
 </html>
