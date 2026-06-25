@@ -24,43 +24,49 @@ def redis_conn():
 
 
 def cart_key(user):
-    return 'cart_%d' % user.id
+    return f"cart_{user.id}"
 
 
 def cart_total_count(user):
     if not user.is_authenticated:
         return 0
-
-    conn = redis_conn()
-    return sum(int(count) for count in conn.hvals(cart_key(user)))
+    r = redis_conn()
+    return sum(map(int, r.hvals(cart_key(user))))
 
 
 def get_cart_skus(user, sku_ids=None):
-    """返回购物车商品列表、总数量、总价格。
-
-    sku_ids 为空时读取整个购物车；不为空时只读取指定商品，供下单确认页使用。
-    """
     conn = redis_conn()
     key = cart_key(user)
     cart_dict = conn.hgetall(key)
 
+    cart_data = {}
+    for b_sku, b_count in cart_dict.items():
+        sku_id = b_sku.decode()
+        count = int(b_count.decode())
+        cart_data[sku_id] = count
+
     if sku_ids is None:
-        sku_ids = cart_dict.keys()
+        target_sku_ids = list(cart_data.keys())
+    else:
+        target_sku_ids = [str(sid) for sid in sku_ids if str(sid) in cart_data]
+
+    if not target_sku_ids:
+        return [], 0, 0
+
+    sku_list = GoodsSKU.objects.filter(id__in=target_sku_ids)
+    sku_map = {str(sku.id): sku for sku in sku_list}
 
     skus = []
     total_count = 0
     total_price = 0
 
-    for sku_id in sku_ids:
-        if isinstance(sku_id, bytes):
-            sku_id = sku_id.decode()
-
-        count = cart_dict.get(str(sku_id).encode()) or cart_dict.get(str(sku_id))
-        if count is None:
+    for sku_id in target_sku_ids:
+        if sku_id not in sku_map:
             continue
 
-        sku = GoodsSKU.objects.get(id=sku_id)
-        count = int(count)
+        sku = sku_map[sku_id]
+        count = cart_data[sku_id]
+
         sku.count = count
         sku.amount = sku.price * count
 

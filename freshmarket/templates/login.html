@@ -19,11 +19,11 @@
 				</div>
 				<div class="form_input">
 					{# 不设置表单action 默认提交地址为当前url #}
-					<form method="post">
+					<form method="post" autocomplete="off">
 						{% csrf_token %}
-						<input type="text" name="username" class="name_input" value="{{ username }}" placeholder="请输入用户名">
+						<input type="text" name="username" class="name_input" value="{{ username }}" placeholder="请输入用户名" autocomplete="off">
 						<div class="user_error">输入错误</div>
-						<input type="password" name="pwd" class="pass_input" placeholder="请输入密码">
+						<input type="password" name="pwd" class="pass_input" placeholder="请输入密码" autocomplete="new-password">
 						<div class="pwd_error">输入错误</div>
 						<div class="more_input clearfix">
 							<input type="checkbox" name="remember" {{ checked }}>

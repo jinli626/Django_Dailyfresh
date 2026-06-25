@@ -1,5 +1,6 @@
 import re
 
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.sessions.backends.cache import SessionStore
 from django.conf import settings
@@ -15,7 +16,6 @@ from goods.models import GoodsSKU
 from order.models import OrderGoods, OrderInfo
 from user.models import Address, User
 from utils.common import paginate
-from utils.mixin import LoginRequiredMixin
 
 EMAIL_RE = r'^[a-z0-9][\w.\-]*@[a-z0-9\-]+(\.[a-z]{2,5}){1,2}$'
 PHONE_RE = r'^1[34578]\d{9}$'
@@ -99,7 +99,10 @@ class LoginView(View):
         password = request.POST.get('pwd')
 
         if not all([username, password]):
-            return render(request, 'login.html', {'errmsg': '账号或者密码不能为空'})
+            return render(request, 'login.html', {
+                'errmsg': '账号或者密码不能为空',
+                'username': username or '',
+            })
 
         user = authenticate(username=username, password=password)
         if user is None:
@@ -120,9 +123,15 @@ class LoginView(View):
     def login_failed(request, username, password):
         user = User.objects.filter(username=username).first()
         if user and user.check_password(password) and not user.is_active:
-            return render(request, 'login.html', {'errmsg': '账户未激活'})
+            return render(request, 'login.html', {
+                'errmsg': '账户未激活',
+                'username': username,
+            })
 
-        return render(request, 'login.html', {'errmsg': '账号或者密码错误'})
+        return render(request, 'login.html', {
+            'errmsg': '账号或者密码错误',
+            'username': username,
+        })
 
 
 def logout_view(request):

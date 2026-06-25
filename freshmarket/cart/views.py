@@ -1,10 +1,10 @@
 from django.http import JsonResponse
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render
 from django.views.generic import View
 
 from goods.models import GoodsSKU
 from utils.common import cart_key, cart_total_count, get_cart_skus, json_login_required, redis_conn
-from utils.mixin import LoginRequiredMixin
 
 
 class CartAddView(View):

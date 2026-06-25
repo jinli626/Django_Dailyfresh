@@ -3,6 +3,7 @@ import time
 from datetime import datetime
 
 from alipay import AliPay
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.conf import settings
 from django.db import transaction
 from django.http import JsonResponse
@@ -14,7 +15,6 @@ from goods.models import GoodsSKU
 from order.models import OrderGoods, OrderInfo
 from user.models import Address
 from utils.common import cart_key, get_cart_skus, json_login_required, redis_conn
-from utils.mixin import LoginRequiredMixin
 
 ALIPAY_APP_ID = '9021000164696803'
 ALIPAY_GATEWAY = 'https://openapi-sandbox.dl.alipaydev.com/gateway.do?'
