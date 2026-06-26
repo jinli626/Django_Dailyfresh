@@ -22,7 +22,7 @@ app = Celery('celery_tasks.tasks', broker='redis://:123123@127.0.0.1:6379/0')  #
 def send_register_active_email(to_email, username, token):
     """处理逻辑不变，直接复制即可"""
     # 发送邮件
-    # 设置发件人显示为：天天生鲜 <2197381455@qq.com>
+    # 设置发件人显示为：天天生鲜 <1032828817@qq.com>
     from_email = formataddr(("天天生鲜", settings.EMAIL_HOST_USER))
 
     subject = '欢迎注册天天生鲜'

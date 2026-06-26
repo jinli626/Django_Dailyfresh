@@ -44,27 +44,7 @@ INSTALLED_APPS = [
     'cart',
     'storages',
     'haystack',  # 导入搜索功能模块
-
 ]
-
-# 后台美化代码
-SUMMERNOTE_CONFIG = {
-    # Using SummernoteWidget - iframe mode
-    'iframe': True,  # or set False to use SummernoteInplaceWidget - no iframe mode
-
-    # Using Summernote Air-mode
-    'airMode': False,
-
-    # Use native HTML tags (`<b>`, `<i>`, ...) instead of style attributes
-    'styleWithSpan': False,
-
-    # Change editor size
-    'width': '80%',
-    'height': '480',
-
-    # Use proper language setting automatically (default)
-    'lang': 'zh-CN',
-}
 
 # 富文本编辑器的配置
 # settings.py

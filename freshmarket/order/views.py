@@ -60,7 +60,7 @@ class OrderPlaceView(LoginRequiredMixin, View):
         })
 
 
-class OrderCommitView1(View):
+class OrderCommitView(View):
     """创建订单"""
 
     @json_login_required
