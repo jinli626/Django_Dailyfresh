@@ -1,0 +1,43 @@
+{% extends 'base/base_user_center.html' %}
+{% load static %}
+{% block title %}天天生鲜-商品评价{% endblock %}
+{% block page_title %}用户中心{% endblock page_title %}
+{% block right_content %}
+<div class="right_content clearfix">
+    <h3 class="common_title2">商品评价</h3>
+    <ul class="order_list_th w978 clearfix">
+        <li class="col01">{{ order.create_time }}</li>
+        <li class="col02">订单号：{{ order.order_id }}</li>
+        <li class="col02 stress">{{ order.status_name }}</li>
+    </ul>
+
+    <form method="post" class="single_comment_form">
+        {% csrf_token %}
+        <div class="single_comment_card">
+            <a href="{% url 'goods:detail' order_sku.sku.id %}" class="single_comment_img">
+                <img src="{{ order_sku.sku.image.url }}" alt="{{ order_sku.sku.name }}">
+            </a>
+            <div class="single_comment_info">
+                <h4><a href="{% url 'goods:detail' order_sku.sku.id %}">{{ order_sku.sku.name }}</a></h4>
+                <p>{{ order_sku.price }}元/{{ order_sku.sku.unite }} × {{ order_sku.count }}</p>
+                <strong>{{ order_sku.amount }}元</strong>
+            </div>
+        </div>
+
+        <div class="site_con single_comment_box">
+            <label>评价内容：</label>
+            <textarea class="site_area" name="content" placeholder="写下这件商品的口感、品质或配送体验">{{ order_sku.comment }}</textarea>
+            {% if remaining_count %}
+            <p class="comment_hint">提交后该订单还有 {{ remaining_count }} 件商品待评价。</p>
+            {% else %}
+            <p class="comment_hint">提交后该订单将进入已评价。</p>
+            {% endif %}
+        </div>
+
+        <div class="single_comment_actions">
+            <a href="{% url 'user:order' 1 %}?status=uncomment" class="comment_back">返回订单</a>
+            <input type="submit" value="提交评价" class="info_submit">
+        </div>
+    </form>
+</div>
+{% endblock right_content %}

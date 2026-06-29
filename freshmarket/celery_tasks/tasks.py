@@ -1,18 +1,15 @@
-# 现在开始编写异步处理代码
 from email.utils import formataddr
 
 import django
 # 注册
 from django.core.mail import send_mail
 from django.conf import settings
-import time
 
 import os
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'freshmarket.settings')
 django.setup()
 
-import os
 from celery import Celery
 
 app = Celery('celery_tasks.tasks', broker='redis://:123123@127.0.0.1:6379/0')  # 创建对象, Redis 有密码 123123

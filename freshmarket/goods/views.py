@@ -29,7 +29,7 @@ class IndexView(View):
                 display_type=0
             ).order_by('index')
 
-        return render(request, 'index.html', {
+        return render(request, 'goods/index.html', {
             'types': types,
             'goods_banners': IndexGoodsBanner.objects.all().order_by('index'),
             'promotion_banners': IndexPromotionBanner.objects.all().order_by('index'),
@@ -51,7 +51,7 @@ class DetailView(View):
         if request.user.is_authenticated:
             self.save_history(request.user, goods_id)
 
-        return render(request, 'detail.html', {
+        return render(request, 'goods/detail.html', {
             'types': GoodsType.objects.all(),
             'sku': sku,
             'sku_orders': OrderGoods.objects.filter(sku=sku).exclude(comment=''),
@@ -82,7 +82,7 @@ class ListView(View):
         skus = self.get_skus(goods_type, sort)
         skus_page, num_pages, page = paginate(skus, page, 8)
 
-        return render(request, 'list.html', {
+        return render(request, 'goods/list.html', {
             'type': goods_type,
             'types': GoodsType.objects.all(),
             'skus_page': skus_page,

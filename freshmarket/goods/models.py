@@ -1,12 +1,10 @@
 from django.db import models
 from tinymce.models import HTMLField
 from db.base_model import BaseModel
-from django.utils.encoding import force_str as force_text
 
 """
 知识补充
 富文本编辑器编辑过的数据，本质上带HTML标签指定样式的数据，可以直接在前端进行渲染
-
 """
 
 
@@ -100,7 +98,7 @@ class IndexTypeGoodsBanner(BaseModel):
     )
 
     type = models.ForeignKey('GoodsType', on_delete=models.CASCADE, verbose_name='商品类型')
-    sku = models.ForeignKey('GoodsSKU', on_delete=models.CASCADE, verbose_name='商品SKU')
+    sku = models.ForeignKey('GoodsSKU', on_delete=models.CASCADE, verbose_name='商品')
     display_type = models.SmallIntegerField(default=1, choices=DISPLAY_TYPE_CHOICES, verbose_name='展示类型')
     index = models.SmallIntegerField(default=0, verbose_name='展示顺序')
 

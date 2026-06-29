@@ -1,0 +1,186 @@
+{# 管理员端专用基础模板：与用户端完全分离 #}
+<!DOCTYPE html>
+<html lang="zh-CN">
+{% load static %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>{% block title %}天天生鲜-后台管理{% endblock title %}</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/reset.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}?v=20260623-back-top">
+    {% block extra_head %}{% endblock extra_head %}
+    <style>
+        /* 管理员端样式：与用户端区分 */
+        .admin-header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            height: 64px;
+            line-height: 64px;
+            padding: 0 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 12px rgba(0,0,0,.15);
+        }
+        .admin-header .admin-logo {
+            font-size: 20px;
+            font-weight: 700;
+            color: #fff;
+            text-decoration: none;
+            letter-spacing: 1px;
+        }
+        .admin-header .admin-logo span {
+            color: #37ab40;
+        }
+        .admin-header .admin-header-links a,
+        .admin-header .admin-header-links span {
+            color: rgba(255,255,255,.75);
+            font-size: 14px;
+            text-decoration: none;
+            margin-left: 16px;
+        }
+        .admin-header .admin-header-links a:hover {
+            color: #37ab40;
+        }
+        .admin-header .admin-header-links .logout-link {
+            color: #f56c6c !important;
+        }
+        .admin-header .admin-header-links .logout-link:hover {
+            color: #ff7878 !important;
+        }
+        .admin-container {
+            min-height: calc(100vh - 64px - 48px);
+            background: #f5f7fa;
+            padding: 40px 0;
+        }
+        .admin-card {
+            width: 460px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 24px rgba(0,0,0,.08);
+            padding: 40px 36px;
+        }
+        .admin-card h2 {
+            font-size: 22px;
+            color: #1a1a2e;
+            text-align: center;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        .admin-card .admin-subtitle {
+            text-align: center;
+            color: #909399;
+            font-size: 13px;
+            margin-bottom: 28px;
+        }
+        .admin-card .form-row {
+            margin-bottom: 18px;
+        }
+        .admin-card .form-row label {
+            display: block;
+            font-size: 14px;
+            color: #303133;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+        .admin-card .form-row input {
+            width: 100%;
+            height: 42px;
+            border: 1px solid #dcdfe6;
+            border-radius: 4px;
+            padding: 0 14px;
+            font-size: 14px;
+            box-sizing: border-box;
+            transition: border-color .2s;
+        }
+        .admin-card .form-row input:focus {
+            border-color: #37ab40;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(55,171,64,.15);
+        }
+        .admin-card .form-actions {
+            margin-top: 24px;
+        }
+        .admin-card .btn-primary {
+            width: 100%;
+            height: 44px;
+            background: linear-gradient(135deg, #37ab40, #2d8f35);
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            letter-spacing: 1px;
+            transition: opacity .2s;
+        }
+        .admin-card .btn-primary:hover {
+            opacity: .9;
+        }
+        .admin-card .form-error {
+            background: #fef0f0;
+            border: 1px solid #fde2e2;
+            color: #e4393c;
+            padding: 10px 14px;
+            border-radius: 4px;
+            font-size: 13px;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+        .admin-card .form-links {
+            text-align: center;
+            margin-top: 18px;
+            font-size: 14px;
+            color: #909399;
+        }
+        .admin-card .form-links a {
+            color: #37ab40;
+            text-decoration: none;
+        }
+        .admin-card .form-links a:hover {
+            text-decoration: underline;
+        }
+        .admin-footer {
+            text-align: center;
+            padding: 14px 0;
+            color: #909399;
+            font-size: 12px;
+            background: #f5f7fa;
+        }
+        .admin-notice {
+            background: #ecf5ff;
+            border: 1px solid #d9ecff;
+            color: #409eff;
+            padding: 10px 14px;
+            border-radius: 4px;
+            font-size: 13px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    {# 管理员顶部导航栏 #}
+    <div class="admin-header">
+        <a href="{% url 'goods:index' %}" class="admin-logo">天天生鲜<span>·管理后台</span></a>
+        <div class="admin-header-links">
+            <a href="{% url 'goods:index' %}">← 返回商城</a>
+            <span>|</span>
+            <a href="/admin/">Django管理</a>
+            {% if user.is_authenticated %}
+            <span>|</span>
+            <span>👤 {{ user.username }}</span>
+            <a href="{% url 'admin_panel:logout' %}" class="logout-link">退出登录</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="admin-container">
+        {% block admin_content %}{% endblock admin_content %}
+    </div>
+
+    <div class="admin-footer">
+        © 2024 天天生鲜 Admin Panel · 管理后台
+    </div>
+</body>
+</html>

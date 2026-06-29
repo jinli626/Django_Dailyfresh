@@ -47,7 +47,7 @@ class CartInfoView(LoginRequiredMixin, View):
 
     def get(self, request):
         skus, total_count, total_price = get_cart_skus(request.user)
-        return render(request, 'cart.html', {
+        return render(request, 'cart/cart.html', {
             'skus': skus,
             'total_count': total_count,
             'total_price': total_price,
@@ -76,8 +76,11 @@ class CartUpdateView(View):
         if count > sku.stock:
             return JsonResponse({'res': 4, 'errmsg': '库存不足'})
 
-        redis_conn().hset(cart_key(request.user), sku_id, count)
-        return JsonResponse({'res': 5, 'errmsg': '更新成功!'})
+        conn = redis_conn()
+        key = cart_key(request.user)
+        conn.hset(key, sku_id, count)
+        total_count = sum(int(c) for c in conn.hvals(key))
+        return JsonResponse({'res': 5, 'total_count': total_count, 'errmsg': '更新成功!'})
 
 
 class CartDeleteView(View):

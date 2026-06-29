@@ -1,0 +1,115 @@
+{% extends 'base/base_user_center.html' %}
+{% load static %}
+{% block right_content %}
+<div class="right_content clearfix">
+	{% csrf_token %}
+	<h3 class="common_title2">全部订单</h3>
+	<div class="order_status_tabs clearfix">
+		{% for tab in status_tabs %}
+		<a href="{% url 'user:order' 1 %}{% if tab.key != 'all' %}?status={{ tab.key }}{% endif %}" class="{% if status == tab.key %}active{% endif %}">
+			{{ tab.name }}<em>{{ tab.count }}</em>
+		</a>
+		{% endfor %}
+	</div>
+	{% for item in order_page %}
+	<ul class="order_list_th w978 clearfix">
+		<li class="col01">{{ item.order.create_time }}</li>
+		<li class="col02">订单号：{{ item.order.order_id }}</li>
+	</ul>
+
+	<table class="order_list_table w980">
+		<tbody>
+			<tr>
+				<td width="60%">
+					<ul class="order_goods_list clearfix">
+						<li class="col01"><a href="{% url 'goods:detail' item.order_sku.sku.id %}"><img src="{{ item.order_sku.sku.image.url }}"></a></li>
+						<li class="col02"><a href="{% url 'goods:detail' item.order_sku.sku.id %}" class="order_goods_name">{{ item.order_sku.sku.name }}</a><em>{{ item.order_sku.sku.price }}元/{{ item.order_sku.sku.unite }}</em></li>
+						<li class="col03">{{ item.order_sku.count }}</li>
+						<li class="col04">{{ item.order_sku.amount }}元</li>
+					</ul>
+				</td>
+				<td width="25%">{{ item.total_pay }}(含运费:{{ item.order.transit_price }})元</td>
+				<td width="15%">
+					<a href="{% if item.order_sku.comment %}#{% else %}{% url 'order:comment_item' item.order.order_id item.order_sku.id %}{% endif %}"
+					   order_id="{{ item.order.order_id }}"
+					   order_status="{{ item.order.order_status }}"
+					   commented="{% if item.order_sku.comment %}1{% else %}0{% endif %}"
+					   class="oper_btn">去付款</a>
+				</td>
+			</tr>
+		</tbody>
+	</table>
+	{% empty %}
+	<div class="order_empty">当前分类暂无订单</div>
+	{% endfor %}
+	<div class="pagenation compact_pagenation">
+		{% if order_page.has_previous %}
+		<a href="{% url 'user:order' order_page.previous_page_number %}{% if status != 'all' %}?status={{ status }}{% endif %}">上一页</a>
+		{% else %}
+		<span class="disabled">上一页</span>
+		{% endif %}
+		<span class="page_info">第 {{ order_page.number }} / {{ num_pages }} 页</span>
+		{% if order_page.has_next %}
+		<a href="{% url 'user:order' order_page.next_page_number %}{% if status != 'all' %}?status={{ status }}{% endif %}">下一页</a>
+		{% else %}
+		<span class="disabled">下一页</span>
+		{% endif %}
+	</div>
+</div>
+{% endblock right_content %}
+{% block bottomfiles %}
+	<script src="{% static 'js/jquery-1.12.4.min.js' %}"></script>
+	<script>
+	$('.oper_btn').each(function () {
+		var orderStatus = parseInt($(this).attr('order_status'));
+		var commented = $(this).attr('commented') === '1';
+
+		if (orderStatus === 1) {
+			$(this).text('去支付');
+			$(this).addClass('oper_btn_primary');
+			$(this).css({'background': '#1f7ae0', 'color': '#fff'});
+		} else if (orderStatus === 4) {
+			if (commented) {
+				$(this).text('已评价');
+			} else {
+				$(this).text('去评价');
+				$(this).addClass('oper_btn_primary');
+				$(this).css({'background': '#1f7ae0', 'color': '#fff'});
+			}
+		} else if (orderStatus === 5) {
+			$(this).text('已评价');
+		} else if (orderStatus === 2 || orderStatus === 3) {
+			$(this).text('已支付');
+		}
+	});
+
+	$('.oper_btn').click(function(event) {
+		var orderStatus = parseInt($(this).attr('order_status'));
+		var order_id = $(this).attr('order_id');
+		var commented = $(this).attr('commented') === '1';
+
+		if (orderStatus === 1) {
+			event.preventDefault();
+			var csrf = $('input[name="csrfmiddlewaretoken"]').val();
+			$.post('/order/mock_pay/', {
+				order_id: order_id, csrfmiddlewaretoken: csrf
+			}, function(data) {
+				if (data.res == 3) {
+					alert(data.message);
+					location.reload();
+				} else {
+					alert(data.errmsg);
+				}
+			}).fail(function(xhr) {
+				alert('发起支付失败：' + xhr.status + ' ' + xhr.statusText);
+			});
+		} else if (orderStatus === 4 && commented) {
+			// 已评价，不跳转
+			event.preventDefault();
+		} else if (orderStatus !== 4) {
+			// 已支付/已评价，不跳转
+			event.preventDefault();
+		}
+	});
+	</script>
+{% endblock bottomfiles %}

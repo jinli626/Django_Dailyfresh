@@ -7,7 +7,7 @@ def cart_count(request):
 
     if user and user.is_authenticated:
         conn = get_redis_connection('default')
-        cart_key = 'cart_%d' % user.id
+        cart_key = f'cart_{user.id}'
         for value in conn.hvals(cart_key):
             count += int(value)
 

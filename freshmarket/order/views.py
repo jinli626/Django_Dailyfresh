@@ -49,7 +49,7 @@ class OrderPlaceView(LoginRequiredMixin, View):
             return redirect(reverse('cart:show'))
 
         skus, total_count, total_price = get_cart_skus(request.user, sku_ids)
-        return render(request, 'place_order.html', {
+        return render(request, 'order/place_order.html', {
             'skus': skus,
             'total_count': total_count,
             'total_price': total_price,
@@ -255,43 +255,36 @@ class CheckPayView(OrderPayView):
 
 
 class CommentView(LoginRequiredMixin, View):
-    """订单评论"""
+    """订单评论 — 针对单个商品"""
 
-    def get(self, request, order_id, order_goods_id=None):
+    def get(self, request, order_id, order_goods_id):
         order = self.get_user_order(request.user, order_id)
         if order is None:
             return redirect(reverse('user:order', kwargs={'page': 1}))
 
         order.status_name = OrderInfo.ORDER_STATUS[order.order_status]
-
-        if order_goods_id is None:
-            return self.redirect_first_uncommented(order, order_id)
-
         order_sku = OrderGoods.objects.filter(id=order_goods_id, order=order).first()
         if order_sku is None:
             return redirect(reverse('user:order', kwargs={'page': 1}))
 
         order_sku.amount = order_sku.count * order_sku.price
         remaining_count = OrderGoods.objects.filter(order=order, comment='').exclude(id=order_sku.id).count()
-        return render(request, 'order_comment.html', {
+        return render(request, 'order/order_comment.html', {
             'order': order,
             'order_sku': order_sku,
             'remaining_count': remaining_count
         })
 
-    def post(self, request, order_id, order_goods_id=None):
+    def post(self, request, order_id, order_goods_id):
         order = self.get_user_order(request.user, order_id)
         if order is None:
             return redirect(reverse('user:order', kwargs={'page': 1}))
 
-        if order_goods_id is None:
-            self.save_old_comment_form(request, order)
-        else:
-            order_goods = OrderGoods.objects.filter(id=order_goods_id, order=order).first()
-            if order_goods is None:
-                return redirect(reverse('user:order', kwargs={'page': 1}))
-            order_goods.comment = request.POST.get('content', '')
-            order_goods.save()
+        order_goods = OrderGoods.objects.filter(id=order_goods_id, order=order).first()
+        if order_goods is None:
+            return redirect(reverse('user:order', kwargs={'page': 1}))
+        order_goods.comment = request.POST.get('content', '')
+        order_goods.save()
 
         order.order_status = 4 if OrderGoods.objects.filter(order=order, comment='').exists() else 5
         order.save()
@@ -302,27 +295,3 @@ class CommentView(LoginRequiredMixin, View):
         if not order_id:
             return None
         return OrderInfo.objects.filter(order_id=order_id, user=user).first()
-
-    @staticmethod
-    def redirect_first_uncommented(order, order_id):
-        order_goods = OrderGoods.objects.filter(order=order, comment='').first()
-        if order_goods is None:
-            return redirect(reverse('user:order', kwargs={'page': 1}))
-
-        return redirect(reverse('order:comment_item', kwargs={
-            'order_id': order_id,
-            'order_goods_id': order_goods.id
-        }))
-
-    @staticmethod
-    def save_old_comment_form(request, order):
-        total_count = int(request.POST.get('total_count', 0))
-
-        for index in range(1, total_count + 1):
-            sku_id = request.POST.get('sku_%d' % index)
-            order_goods = OrderGoods.objects.filter(order=order, sku_id=sku_id).first()
-            if order_goods is None:
-                continue
-
-            order_goods.comment = request.POST.get('content_%d' % index, '')
-            order_goods.save()

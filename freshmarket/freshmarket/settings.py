@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     'simpleui',
     'tinymce',  # 富文本编辑器
     'django.contrib.admin',
+    'admin.apps.AdminConfig',  # 管理端（独立于 user）
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -84,6 +85,7 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    'utils.admin_middleware.AdminLogoutMiddleware',  # 管理后台退出登录按钮注入
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
@@ -176,12 +178,9 @@ EMAIL_HOST_PASSWORD = 'xdmrhttebcfkbbag'
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 # Celery 配置
-
-# CELERY_BROKER_URL = 'redis://127.0.0.1:6379/0'
-
+CELERY_BROKER_URL = 'redis://127.0.0.1:6379/0'
 
 # Django的缓存配置
-
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
@@ -198,6 +197,9 @@ SESSION_CACHE_ALIAS = "default"
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 
 LOGIN_URL = '/user/login'
+
+# ===== 管理员相关配置 =====
+ADMIN_INVITE_CODE = 'fresh888'  # 管理员注册邀请码，修改此值以更换邀请码
 
 # ===== 本地文件存储（开发环境）=====
 # 图片上传到项目下的 media/ 目录，不依赖 MinIO
@@ -226,5 +228,4 @@ HAYSTACK_CONNECTIONS = {
 }
 
 # 指定实时更新索引，当有数据发生改变时，自动更新索引
-
 HAYSTACK_SIGNAL_PROCESSOR = 'haystack.signals.RealtimeSignalProcessor'

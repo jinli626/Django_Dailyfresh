@@ -1,0 +1,49 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+{% block title %}天天生鲜-管理员注册{% endblock title %}
+
+{% block admin_content %}
+<div class="admin-card">
+    <h2>🔐 管理员注册</h2>
+    <p class="admin-subtitle">创建管理员账号，管理天天生鲜后台系统</p>
+
+    {% if errmsg %}
+    <div class="form-error">{{ errmsg }}</div>
+    {% endif %}
+
+    <div class="admin-notice">
+        📌 <strong>邀请码提示：</strong>当前邀请码为 <code style="background:#c6e2ff;padding:2px 6px;border-radius:3px;font-weight:bold;">{{ invite_code }}</code>，注册时请填写此邀请码。如需更换，请在 <code>settings.py</code> 中修改 <code>ADMIN_INVITE_CODE</code> 配置项。
+    </div>
+
+    <form method="post" action="{% url 'admin_panel:register' %}" autocomplete="off">
+        {% csrf_token %}
+        <div class="form-row">
+            <label>用户名</label>
+            <input type="text" name="username" placeholder="请输入管理员用户名" autocomplete="off" required>
+        </div>
+        <div class="form-row">
+            <label>邮箱</label>
+            <input type="email" name="email" placeholder="请输入邮箱地址" required>
+        </div>
+        <div class="form-row">
+            <label>密码</label>
+            <input type="password" name="password" placeholder="至少6位密码" autocomplete="new-password" required>
+        </div>
+        <div class="form-row">
+            <label>确认密码</label>
+            <input type="password" name="confirm_password" placeholder="请再次输入密码" autocomplete="new-password" required>
+        </div>
+        <div class="form-row">
+            <label>🔑 管理员邀请码</label>
+            <input type="text" name="invite_code" placeholder="请输入邀请码" required>
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn-primary">注 册 管 理 员</button>
+        </div>
+    </form>
+
+    <div class="form-links">
+        已有管理员账号？<a href="/admin/login/">返回管理登录</a>
+    </div>
+</div>
+{% endblock admin_content %}

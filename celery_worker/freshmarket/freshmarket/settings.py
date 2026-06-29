@@ -16,7 +16,6 @@ import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
@@ -28,11 +27,10 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-
 # Application definition
 
 INSTALLED_APPS = [
-    'tinymce', #富文本编辑器
+    'tinymce',  # 富文本编辑器
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -46,9 +44,7 @@ INSTALLED_APPS = [
 
 ]
 
-
-
-#富文本编辑器的配置
+# 富文本编辑器的配置
 # settings.py
 TINYMCE_DEFAULT_CONFIG = {
     'height': 360,
@@ -78,7 +74,6 @@ TINYMCE_DEFAULT_CONFIG = {
     'menubar': True,
     'statusbar': True,
 }
-
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -110,21 +105,19 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'freshmarket.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',      # 虚拟环境下的引擎
-        'HOST': 'localhost',      # 主机
-        'PORT': '3306',           # 端口
-        'USER': 'root',           # 用户名
-        'PASSWORD': '123456', # 密码
-        'NAME': 'dailyfresh1',   # 使用的数据库
+        'ENGINE': 'django.db.backends.mysql',  # 虚拟环境下的引擎
+        'HOST': 'localhost',  # 主机
+        'PORT': '3306',  # 端口
+        'USER': 'root',  # 用户名
+        'PASSWORD': '123456',  # 密码
+        'NAME': 'dailyfresh1',  # 使用的数据库
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
@@ -144,7 +137,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
@@ -156,25 +148,22 @@ USE_I18N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-#静态文件的配置
+# 静态文件的配置
 STATIC_URL = 'static/'
-STATICFILES_DIRS = [os.path.join(BASE_DIR,'static')]
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-
-#自定义模型
+# 自定义模型
 AUTH_USER_MODEL = 'user.User'
 
-
-#发送邮件服务器配置
+# 发送邮件服务器配置
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.qq.com'
 EMAIL_PORT = 465
@@ -183,7 +172,6 @@ EMAIL_HOST_USER = '2197381455@qq.com'
 EMAIL_HOST_PASSWORD = 'gxdekqznggcfeabi'
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
-
-#Celery 配置
+# Celery 配置
 
 CELERY_BROKER_URL = 'redis://127.0.0.1:6379/0'

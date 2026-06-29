@@ -1,0 +1,231 @@
+{% extends 'base/base_detail_list.html' %}
+
+{% load static %}
+{% block title %}天天生鲜-商品详情{% endblock title %}
+
+{% block main_content %}
+	<div class="breadcrumb">
+		<a href="{% url 'goods:index' %}">全部分类</a>
+		<span>></span>
+		<a href="{% url 'goods:list' sku.type.id 1 %}">{{ sku.type.name }}</a>
+		<span>></span>
+		<a href="#">商品详情</a>
+	</div>
+
+	<div class="product_page">
+		<div class="product_hero">
+			<div class="product_media">
+				<img src="{{ sku.image.url }}" alt="{{ sku.name }}">
+			</div>
+
+			<div class="product_summary">
+				<h2>{{ sku.name }}</h2>
+				<p class="product_desc">{{ sku.desc }}</p>
+				<div class="product_price">
+					<span class="show_pirze">¥<em>{{ sku.price }}</em></span>
+					<span class="show_unit">单位：{{ sku.unite }}</span>
+				</div>
+
+				<div class="product_control">
+					<span class="control_label">数量：</span>
+					<div class="num_add">
+						<input type="text" class="num_show" value="1">
+						<div class="num_actions">
+							<a href="javascript:;" class="add">+</a>
+							<a href="javascript:;" class="minus">-</a>
+						</div>
+					</div>
+				</div>
+
+				<div class="product_specs">
+					<span>其他规格：</span>
+					{% for spec_sku in same_spu_skus %}
+						<a href="{% url 'goods:detail' spec_sku.id %}">{{ spec_sku.name }}</a>
+					{% empty %}
+						<em>暂无其他规格</em>
+					{% endfor %}
+				</div>
+
+				<div class="total product_total">总价：<em>16.80元</em></div>
+				<div class="operate_btn product_actions">
+					{% csrf_token %}
+					<a href="javascript:;" class="buy_btn">立即购买</a>
+					<a href="javascript:;" sku_id="{{ sku.id }}" class="add_cart" id="add_cart">加入购物车</a>
+				</div>
+			</div>
+		</div>
+
+		<div class="product_body">
+			<div class="product_recs">
+				<h3>新品推荐</h3>
+				<ul>
+					{% for new_sku in new_skus %}
+					<li>
+						<a href="{% url 'goods:detail' new_sku.id %}"><img src="{{ new_sku.image.url }}" alt="{{ new_sku.name }}"></a>
+						<h4><a href="{% url 'goods:detail' new_sku.id %}">{{ new_sku.name }}</a></h4>
+						<div class="prize">￥{{ new_sku.price }}</div>
+					</li>
+					{% endfor %}
+				</ul>
+			</div>
+
+			<div class="product_detail_panel">
+				<ul class="detail_tab clearfix">
+					<li id="tag_detail" class="active">商品介绍</li>
+					<li id="tag_comment">评论</li>
+				</ul>
+
+				<div class="tab_content" id="tab_detail">
+					<dl>
+						<dt>商品详情：</dt>
+						<dd>{{ sku.goods.detail|safe }}</dd>
+					</dl>
+				</div>
+
+				<div class="tab_content" id="tab_comment" style="display: none;">
+					<dl>
+						{% for order in sku_orders %}
+						<dt>评论时间：{{ order.update_time }}&nbsp;&nbsp;用户名:{{ order.order.user.username }}</dt>
+						<dd>评论内容:{{ order.comment }}</dd>
+						{% empty %}
+						<dd>暂无评论</dd>
+						{% endfor %}
+					</dl>
+				</div>
+			</div>
+		</div>
+	</div>
+{% endblock main_content %}
+{% block bottom %}
+	<div class="add_jump"></div>
+{% endblock bottom %}
+{% block bottomfiles %}
+	<script type="text/javascript" src="{% static 'js/jquery-1.12.4.min.js' %}"></script>
+	<script type="text/javascript">
+	$(function(){
+		$('#tag_detail').click(function () {
+			$('#tag_comment').removeClass('active');
+			$(this).addClass('active');
+			$('#tab_detail').show();
+			$('#tab_comment').hide();
+		});
+		$('#tag_comment').click(function () {
+			$('#tag_detail').removeClass('active');
+			$(this).addClass('active');
+			$('#tab_detail').hide();
+			$('#tab_comment').show();
+		});
+
+		function update_goods_amount() {
+			var price = parseFloat($('.show_pirze').children('em').text()) || 0;
+			var count = parseInt($('.num_show').val()) || 1;
+			$('.total').children('em').text((price * count).toFixed(2) + '元');
+		}
+		update_goods_amount();
+
+		$('.add').click(function () {
+			var v = (parseInt($('.num_show').val()) || 1) + 1;
+			$('.num_show').val(v);
+			update_goods_amount();
+		});
+		$('.minus').click(function () {
+			var v = (parseInt($('.num_show').val()) || 2) - 1;
+			if (v <= 0) v = 1;
+			$('.num_show').val(v);
+			update_goods_amount();
+		});
+		$('.num_show').blur(function () {
+			var v = parseInt($(this).val());
+			if (isNaN(v) || v <= 0) v = 1;
+			$(this).val(v);
+			update_goods_amount();
+		});
+
+		// 获取 CSRF（优先从 cookie，保证最新）
+		function getCsrf() {
+			var c = document.cookie.match(/csrftoken=([^;]+)/);
+			if (c) return c[1];
+			return $('input[name="csrfmiddlewaretoken"]').val();
+		}
+
+		// 加入购物车
+		$('#add_cart').click(function(){
+			var sku_id = $(this).attr('sku_id');
+			var count = $('.num_show').val();
+			var csrf = getCsrf();
+
+			$.ajax({
+				url: '/cart/add/',
+				type: 'POST',
+				data: {sku_id: sku_id, count: count, csrfmiddlewaretoken: csrf},
+				dataType: 'json'
+			})
+			.done(function(data) {
+				if (data.res == 5) {
+					$('#show_count').html(data.total_count);
+					var $add = $('#add_cart');
+					var $to = $('#show_count');
+					if ($add.length && $to.length) {
+						var ax = $add.offset().top, ay = $add.offset().left;
+						var tx = $to.offset().top, ty = $to.offset().left;
+						$('.add_jump').css({left: ay + 80, top: ax + 10, display: 'block'})
+						.stop().animate({left: ty + 7, top: tx + 7}, 'fast', function() {
+							$(this).fadeOut('fast');
+						});
+					}
+				} else if (data.res == 0) {
+					if (confirm('请先登录后再添加到购物车，是否前往登录？')) {
+						window.location.href = '{% url "user:login" %}';
+					}
+				} else {
+					alert(data.errmsg);
+				}
+			})
+			.fail(function(xhr){
+				if (xhr.status == 403) {
+					alert('页面已过期，请刷新后重试');
+				} else {
+					alert('请求失败，请检查是否已登录或刷新页面后重试');
+				}
+			});
+
+		});
+
+		// 立即购买
+		$('.buy_btn').click(function(){
+			var sku_id = $('#add_cart').attr('sku_id');
+			var count = $('.num_show').val();
+			var csrf = getCsrf();
+
+			$.ajax({
+				url: '/cart/update/',
+				type: 'POST',
+				data: {sku_id: sku_id, count: count, csrfmiddlewaretoken: csrf},
+				dataType: 'json'
+			})
+			.done(function(data) {
+				if (data.res == 5) {
+					var f = $('<form>', {method: 'post', action: '{% url "order:place" %}'});
+					f.append($('<input>', {type: 'hidden', name: 'csrfmiddlewaretoken', value: csrf}));
+					f.append($('<input>', {type: 'hidden', name: 'sku_ids', value: sku_id}));
+					$('body').append(f);
+					f.submit();
+				} else if (data.res == 0) {
+					if (confirm('请先登录后再购买，是否前往登录？')) {
+						window.location.href = '{% url "user:login" %}';
+					}
+				} else {
+					alert(data.errmsg);
+				}
+			})
+			.fail(function(xhr){
+				if (xhr.status == 403) {
+					alert('页面已过期，请刷新后重试');
+				} else {
+					alert('请求失败，请检查是否已登录或刷新页面后重试');
+				}
+			});
+		});
+	});
+	</script>
+{% endblock bottomfiles %}

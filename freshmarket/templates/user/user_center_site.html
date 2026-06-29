@@ -1,0 +1,66 @@
+{% extends 'base/base_user_center.html' %}
+{% block right_content %}
+<div class="right_content clearfix">
+	<h3 class="common_title2">收货地址</h3>
+	<div class="site_con">
+		{% if addresses %}
+		<ul class="address_list">
+		{% for addr in addresses %}
+		<li class="address_item{% if addr.is_default %} address_default{% endif %}">
+			<div class="address_info">
+				<span class="address_tag">{{ addr.receiver }}</span>
+				<span class="address_phone">{{ addr.phone }}</span>
+				{% if addr.is_default %}<em class="default_badge">默认</em>{% endif %}
+				<p class="address_detail">{{ addr.addr }}{% if addr.zip_code %}（邮编：{{ addr.zip_code }}）{% endif %}</p>
+			</div>
+			<div class="address_actions">
+				{% if not addr.is_default %}
+				<form method="post" style="display:inline">
+					{% csrf_token %}
+					<input type="hidden" name="action" value="set_default">
+					<input type="hidden" name="addr_id" value="{{ addr.id }}">
+					<button type="submit" class="addr_btn addr_btn_default">设为默认</button>
+				</form>
+				{% endif %}
+				<form method="post" style="display:inline" onsubmit="return confirm('确定删除该地址吗？')">
+					{% csrf_token %}
+					<input type="hidden" name="action" value="delete">
+					<input type="hidden" name="addr_id" value="{{ addr.id }}">
+					<button type="submit" class="addr_btn addr_btn_delete">删除</button>
+				</form>
+			</div>
+		</li>
+		{% endfor %}
+		</ul>
+		{% else %}
+		<dl><dd>暂无收货地址，请在下方添加</dd></dl>
+		{% endif %}
+	</div>
+
+	<h3 class="common_title2">新增地址</h3>
+	<div class="site_con">
+		<form method="post">
+			{% csrf_token %}
+			<input type="hidden" name="action" value="add">
+			<div class="form_group">
+				<label>收件人：</label>
+				<input type="text" name="receiver" placeholder="请输入收件人姓名">
+			</div>
+			<div class="form_group form_group2">
+				<label>详细地址：</label>
+				<textarea class="site_area" name="addr" placeholder="请输入详细收货地址"></textarea>
+			</div>
+			<div class="form_group">
+				<label>邮编：</label>
+				<input type="text" name="zip_code" placeholder="选填">
+			</div>
+			<div class="form_group">
+				<label>手机：</label>
+				<input type="text" name="phone" placeholder="请输入手机号码">
+			</div>
+			<input type="submit" value="添加地址" class="addr_submit">
+		</form>
+		{% if errmsg %}<p class="addr_errmsg">{{ errmsg }}</p>{% endif %}
+	</div>
+</div>
+{% endblock right_content %}
