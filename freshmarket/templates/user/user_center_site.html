@@ -4,7 +4,8 @@
 	<h3 class="common_title2">收货地址</h3>
 	<div class="site_con">
 		{% if addresses %}
-		<ul class="address_list">
+		<div class="address_panel" data-visible-count="2">
+		<ul class="address_list is-collapsed" id="address_list">
 		{% for addr in addresses %}
 		<li class="address_item{% if addr.is_default %} address_default{% endif %}">
 			<div class="address_info">
@@ -32,6 +33,12 @@
 		</li>
 		{% endfor %}
 		</ul>
+		{% if addresses|length > 2 %}
+		<div class="address_toggle_bar">
+			<button type="button" class="address_toggle_btn" id="address_toggle_btn" data-count="{{ addresses|length }}">展开全部 {{ addresses|length }} 个地址</button>
+		</div>
+		{% endif %}
+		</div>
 		{% else %}
 		<dl><dd>暂无收货地址，请在下方添加</dd></dl>
 		{% endif %}
@@ -64,3 +71,30 @@
 	</div>
 </div>
 {% endblock right_content %}
+
+{% block bottomfiles %}
+<script type="text/javascript">
+	(function () {
+		var addressList = document.getElementById('address_list');
+		var toggleBtn = document.getElementById('address_toggle_btn');
+
+		if (!addressList || !toggleBtn) {
+			return;
+		}
+
+		var totalCount = toggleBtn.getAttribute('data-count') || addressList.children.length;
+
+		toggleBtn.onclick = function () {
+			var isCollapsed = addressList.className.indexOf('is-collapsed') !== -1;
+
+			if (isCollapsed) {
+				addressList.className = addressList.className.replace(/\bis-collapsed\b/g, '').replace(/\s+/g, ' ');
+				toggleBtn.innerHTML = '收起地址';
+			} else {
+				addressList.className += ' is-collapsed';
+				toggleBtn.innerHTML = '展开全部 ' + totalCount + ' 个地址';
+			}
+		};
+	})();
+</script>
+{% endblock bottomfiles %}
